@@ -6,7 +6,7 @@ using Unity.Notifications.Android;
 
 public class NotificationManager : MonoBehaviour
 {
-    int endHour = 9;
+    public int endHour = 21;
 
     private void Start()
     {
@@ -37,17 +37,26 @@ public class NotificationManager : MonoBehaviour
         //    AndroidNotificationCenter.SendNotification(notification, "channel_id");
         //}
 
+        List<System.DateTime> fireTimes = new List<System.DateTime>();
         var nextFireTime = System.DateTime.Now;
-        while (nextFireTime.Hour < endHour)
+        while(nextFireTime.Hour < endHour)
         {
-            var notification = new AndroidNotification();
-            notification.Title = nextFireTime.Hour.ToString();
-            print(nextFireTime.Hour.ToString());
-            notification.FireTime = nextFireTime;
-            AndroidNotificationCenter.SendNotification(notification, "channel_id");
+            fireTimes.Add(nextFireTime);
             nextFireTime = nextFireTime.AddMinutes(10);
         }
+
+        for (int i = 0; i < fireTimes.Count; i++)
+        {
+            var notification = new AndroidNotification();
+            notification.Title = (fireTimes.Count - i).ToString();
+            notification.FireTime = fireTimes[i];
+            AndroidNotificationCenter.SendNotification(notification, "channel_id");
+            //print((fireTimes.Count - i).ToString() + ", " + fireTimes[i]);
+        }
+
     }
 
     public void CancelNotifications() => AndroidNotificationCenter.CancelAllNotifications();
+
+    public void SetEndHour(string hour) => endHour = int.Parse(hour);
 }
