@@ -3,18 +3,30 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System;
+using TMPro;
 
-public class MenuManager : MonoBehaviour
+public class MenuManager : ScreenState
 {
-    [SerializeField] Transform listParent;
+    [SerializeField] GameObject buttonPrefab;
+    Transform list;
 
     private void Start()
     {
-        foreach (Transform child in listParent)
+        list = transform.GetChild(0);
+
+        foreach (Transform child in transform.parent)
         {
-            child.gameObject.GetComponent<Button>().onClick.AddListener(delegate { LoadScene(child.name); } );
+            if (child != transform)
+            {
+                GameObject button = Instantiate(buttonPrefab, list);
+                button.name = child.name;
+                button.GetComponentInChildren<TextMeshProUGUI>().text = child.name;
+
+                Type childType = child.GetComponent<ScreenState>().GetType();
+                button.GetComponent<Button>().onClick.AddListener(delegate { ScreenManager.instance.ChangeState(childType); });
+            }
         }
     }
 
-    public void LoadScene(string scene) => SceneManager.LoadScene(scene);
 }

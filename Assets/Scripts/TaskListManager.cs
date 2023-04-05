@@ -4,25 +4,25 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class TaskListManager : MonoBehaviour
+public class TaskListManager : ScreenState
 {
     [SerializeField] Transform listParent;
     [SerializeField] GameObject taskPrefab;
     [SerializeField] GameObject newTaskPrompt;
     string newTaskName;
 
-    private void Start()
-    {
-        NewTaskPrompt(false);
-    }
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Return))
-        {
-            AddTask();
-            NewTaskPrompt(false);
-        }
-    }
+    //private void Start()
+    //{
+    //    NewTaskPrompt(false);
+    //}
+    //private void Update()
+    //{
+    //    if (Input.GetKeyDown(KeyCode.Return))
+    //    {
+    //        AddTask();
+    //        NewTaskPrompt(false);
+    //    }
+    //}
 
     void AddTask()
     {

@@ -4,22 +4,31 @@ using UnityEngine;
 using UnityEngine.Android;
 using Unity.Notifications.Android;
 
-public class NotificationManager : MonoBehaviour
+public class NotificationManager : ScreenState
 {
     int endHour = 21;
     int incrementMinutes = 10;
 
     private void Start()
     {
-        var channel = new AndroidNotificationChannel()
+        var channel1 = new AndroidNotificationChannel()
         {
             Id = "channel_id",
-            Name = "Default Channel",
+            Name = "Silent Channel",
             Importance = Importance.Default,
             Description = "Generic notifications",
         };
-        AndroidNotificationCenter.RegisterNotificationChannel(channel);
-        
+        var channel2 = new AndroidNotificationChannel()
+        {
+            Id = "channel_id",
+            Name = "Sound Channel",
+            Importance = Importance.Default,
+            Description = "Generic notifications",
+        };
+
+        AndroidNotificationCenter.RegisterNotificationChannel(channel1);
+        AndroidNotificationCenter.RegisterNotificationChannel(channel2);
+
         if (!Permission.HasUserAuthorizedPermission("android.permission.POST_NOTIFICATIONS"))
         {
             Permission.RequestUserPermission("android.permission.POST_NOTIFICATIONS");
@@ -29,14 +38,6 @@ public class NotificationManager : MonoBehaviour
 
     public void SetNotifications()
     {
-        //for (int i = 0; i < 6; i++)
-        //{
-        //    var notification = new AndroidNotification();
-        //    notification.Title = (i * 5) + " seconds";
-        //    //notification.Text = "Your Text";
-        //    notification.FireTime = System.DateTime.Now.AddSeconds(i * 5);
-        //    AndroidNotificationCenter.SendNotification(notification, "channel_id");
-        //}
 
         List<System.DateTime> fireTimes = new List<System.DateTime>();
         var nextFireTime = System.DateTime.Now;
