@@ -8,6 +8,11 @@ public class TaskObject : MonoBehaviour
 {
     bool completed;
 
+    public bool CompleteStatus
+    {
+        get => completed;
+    }
+
     public void TaskStatus()
     {
         completed = !completed;
@@ -17,11 +22,21 @@ public class TaskObject : MonoBehaviour
         alpha.a = completed ? .5f : 1f;
         button.color = alpha;
 
+        TextMeshProUGUI taskText = transform.GetChild(0).GetComponentInChildren<TextMeshProUGUI>();
         if (completed)
-            transform.GetChild(0).GetComponentInChildren<TextMeshProUGUI>().fontStyle = FontStyles.Strikethrough;
+            taskText.fontStyle = FontStyles.Strikethrough;
         else
-            transform.GetChild(0).GetComponentInChildren<TextMeshProUGUI>().fontStyle -= FontStyles.Strikethrough;
+            taskText.fontStyle = FontStyles.Bold;
     }
 
     public void DeleteTask() => Destroy(gameObject);
+
+    public void MoveUp()
+    {
+        int index = transform.GetSiblingIndex();
+        if (index > 0)
+        {
+            transform.SetSiblingIndex(index - 1);
+        }
+    }
 }

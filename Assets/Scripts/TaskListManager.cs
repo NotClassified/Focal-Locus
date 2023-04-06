@@ -11,18 +11,11 @@ public class TaskListManager : ScreenState
     [SerializeField] GameObject newTaskPrompt;
     string newTaskName;
 
-    //private void Start()
-    //{
-    //    NewTaskPrompt(false);
-    //}
-    //private void Update()
-    //{
-    //    if (Input.GetKeyDown(KeyCode.Return))
-    //    {
-    //        AddTask();
-    //        NewTaskPrompt(false);
-    //    }
-    //}
+    public override void OnEnter()
+    {
+        base.OnEnter();
+        NewTaskPrompt(false);
+    }
 
     void AddTask()
     {
@@ -30,10 +23,27 @@ public class TaskListManager : ScreenState
         task.transform.GetChild(0).GetComponentInChildren<TextMeshProUGUI>().text = newTaskName;
     }
 
+    public void ResetTasks()
+    {
+        foreach(TaskObject task in listParent.GetComponentsInChildren<TaskObject>())
+        {
+            if (task.CompleteStatus)
+            {
+                task.TaskStatus();
+            }
+        }
+    }
+
     public void NewTaskPrompt(bool active)
     {
         newTaskPrompt.SetActive(active);
         newTaskPrompt.GetComponentInChildren<TMP_InputField>().text = "";
+    }
+
+    public void ConfrimNewTask()
+    {
+        AddTask();
+        NewTaskPrompt(false);
     }
 
     public void SetNewTaskName(string name) => newTaskName = name;
