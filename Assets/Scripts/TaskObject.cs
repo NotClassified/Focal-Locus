@@ -7,6 +7,16 @@ using TMPro;
 public class TaskObject : MonoBehaviour
 {
     bool completed;
+    string taskName;
+    public string TaskName
+    {
+        get => taskName;
+        set
+        {
+            taskName = value;
+            transform.GetChild(0).GetComponentInChildren<TextMeshProUGUI>().text = value;
+        }
+    }
 
     public bool CompleteStatus
     {
@@ -29,7 +39,10 @@ public class TaskObject : MonoBehaviour
             taskText.fontStyle = FontStyles.Bold;
     }
 
-    public void DeleteTask() => Destroy(gameObject);
+    public void DeleteTask()
+    {
+        FindObjectOfType<TaskListManager>().RemoveTask(gameObject);
+    }
 
     public void MoveUp()
     {
