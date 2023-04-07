@@ -395,7 +395,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 8786238394157873467}
         m_TargetAssemblyTypeName: TaskObject, Assembly-CSharp
-        m_MethodName: MoveUp
+        m_MethodName: ButtonMoveUp
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -429,7 +429,7 @@ GameObject:
   - component: {fileID: 2135964736163476348}
   - component: {fileID: 3769152864472074343}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: Name
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -677,7 +677,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 8786238394157873467}
         m_TargetAssemblyTypeName: TaskObject, Assembly-CSharp
-        m_MethodName: DeleteTask
+        m_MethodName: ButtonRemove
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -712,7 +712,7 @@ GameObject:
   - component: {fileID: 3212385403182433175}
   - component: {fileID: 834930010799880878}
   m_Layer: 5
-  m_Name: Name
+  m_Name: Toggle Complete (Name)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -823,7 +823,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 8786238394157873467}
         m_TargetAssemblyTypeName: TaskObject, Assembly-CSharp
-        m_MethodName: TaskStatus
+        m_MethodName: ButtonToggleTaskStatus
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

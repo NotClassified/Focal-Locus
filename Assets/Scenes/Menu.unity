@@ -642,7 +642,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1769535426}
         m_TargetAssemblyTypeName: TaskListManager, Assembly-CSharp
-        m_MethodName: SetNewTaskName
+        m_MethodName: InputFieldSetNewTaskName
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1458,7 +1458,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1769535426}
         m_TargetAssemblyTypeName: TaskListManager, Assembly-CSharp
-        m_MethodName: ResetTasks
+        m_MethodName: ButtonResetTasks
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3378,10 +3378,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentData:
-    list:
-      tasks: []
-      streak: 0
-  fileName: TaskList
+    lists: []
+    dayIndex: 0
+  fileName: TaskListCollection
 --- !u!1 &1825759941
 GameObject:
   m_ObjectHideFlags: 0
@@ -3468,8 +3467,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1769535426}
         m_TargetAssemblyTypeName: TaskListManager, Assembly-CSharp
-        m_MethodName: NewTaskPrompt
-        m_Mode: 6
+        m_MethodName: ButtonNewTask
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine

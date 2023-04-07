@@ -1,0 +1,42 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+public class TaskObject : MonoBehaviour
+{
+    TaskListManager manager;
+
+    public bool completed;
+
+    string taskName;
+    public string TaskName
+    {
+        get => taskName;
+        set
+        {
+            taskName = value;
+            transform.GetChild(0).GetComponentInChildren<TextMeshProUGUI>().text = value;
+        }
+    }
+
+    private void Start()
+    {
+        manager = FindObjectOfType<TaskListManager>();
+        if (manager == null)
+        {
+            Debug.LogError("manager not found");
+        }
+    }
+
+    public void ButtonToggleTaskStatus()
+    {
+        manager.ToggleTaskComplete(this);
+        manager.DelayUpdateRoutine(60);
+    }
+    public void ButtonMoveUp() => manager.MoveUpTask(transform);
+
+    public void ButtonRemove() => manager.RemoveTask(gameObject);
+
+}

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
-public class TaskListData
+public class TaskObjectData
 {
-    public List<string> tasks = new List<string>();
-    public int streak;
+    public string name;
+    public bool completed;
 }

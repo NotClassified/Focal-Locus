@@ -13,15 +13,16 @@ public class TaskListDataManager : MonoBehaviour
         if (DataExists())
         {
             LoadData();
-            GetComponent<TaskListManager>().LoadData(currentData);
         }
     }
 
-    public void SaveData(TaskListCollection data)
+    public void SaveData(TaskListData listData, int dayIndex)
     {
         DeleteData();
 
-        string json = JsonUtility.ToJson(data, true); 
+        currentData = SaveListToCollection(currentData, listData, dayIndex);
+
+        string json = JsonUtility.ToJson(currentData, true); 
         Debug.Log("Serialized data: \n" + json);
         using (FileStream stream = File.Open(Application.persistentDataPath + "/" + fileName + ".json", 
                                              FileMode.OpenOrCreate, FileAccess.ReadWrite))
@@ -30,7 +31,7 @@ public class TaskListDataManager : MonoBehaviour
             {
                 writer.Write(json);
                 writer.Flush(); // applies the changes to the file
-                currentData = data;
+
                 //Debug.Log(Application.persistentDataPath + "/" + fileName + ".json");
             }
         }
@@ -49,6 +50,8 @@ public class TaskListDataManager : MonoBehaviour
                 string json = reader.ReadToEnd(); 
                 Debug.Log("Previously Saved Data: \n" + json);
                 currentData = JsonUtility.FromJson<TaskListCollection>(json);
+
+                GetComponent<TaskListManager>().LoadCollection(currentData);
             }
         }
     }
@@ -69,5 +72,19 @@ public class TaskListDataManager : MonoBehaviour
             return false;
         }
         return true;
+    }
+
+    TaskListCollection SaveListToCollection(TaskListCollection collection, TaskListData listData, int dayIndex)
+    {
+        if (collection.dayIndex < collection.lists.Count) //this day has a list
+        {
+            collection.lists[currentData.dayIndex] = listData;
+            return collection;
+        }
+        else //this day has NO list, make a new list:
+        {
+            collection.lists.Add(new TaskListData());
+            return SaveListToCollection(collection, listData, dayIndex);
+        }
     }
 }
