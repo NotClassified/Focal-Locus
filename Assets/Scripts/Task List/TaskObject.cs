@@ -33,7 +33,7 @@ public class TaskObject : MonoBehaviour
     public void ButtonToggleTaskStatus()
     {
         manager.ToggleTaskComplete(this);
-        manager.DelayUpdateRoutine(60);
+        manager.StartDelayUpdateRoutine(2);
     }
     public void ButtonMoveUp() => manager.MoveUpTask(transform);
 

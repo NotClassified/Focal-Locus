@@ -6,12 +6,24 @@ using TMPro;
 
 public class TaskListManager : ScreenState
 {
+    TaskListDataManager dataManager;
+
     [SerializeField] Transform listParent;
     [SerializeField] GameObject taskPrefab;
     string newTaskName;
 
     int dayStreak;
+    [SerializeField] TextMeshProUGUI dayIndex_text;
     int dayIndex;
+    int DayIndex
+    {
+        get => dayIndex;
+        set
+        {
+            dayIndex = value;
+            dayIndex_text.text = value.ToString();
+        }
+    }
 
     [SerializeField] GameObject newTaskPrompt;
     bool NewTaskPrompt
@@ -22,23 +34,43 @@ public class TaskListManager : ScreenState
             newTaskPrompt.GetComponentInChildren<TMP_InputField>().text = "";
         }
     }
+    public void InputFieldSetNewTaskName(string name) => newTaskName = name;
     public void ButtonNewTask() => NewTaskPrompt = true;
+    public void ButtonResetTasks()
+    {
+        foreach(Transform child in listParent)
+        {
+            TaskObject task = child.GetComponent<TaskObject>();
+            if (task.completed)
+            {
+                ToggleTaskComplete(task);
+            }
+        }
+        UpdateData();
+    }
+    public void ButtonChangeDay(int dayIncrement)
+    {
+        if (DayIndex + dayIncrement >= 0)
+        {
+            dataManager.ChangeDay(DayIndex + dayIncrement, DayIndex);
+        }
+        StartDelayUpdateRoutine(2);
+    }
+
 
     public override void OnEnter()
     {
         base.OnEnter();
         NewTaskPrompt = false;
-    }
-
-
-    public void ButtonResetTasks()
-    {
-        foreach(TaskObject task in listParent.GetComponentsInChildren<TaskObject>())
+        if (dataManager == null)
         {
-            ToggleTaskComplete(task);
+            dataManager = GetComponent<TaskListDataManager>();
+
+            if (dataManager == null)
+                Debug.LogError("No data manager detected");
         }
-        UpdateData();
     }
+
 
     void AddTask(string taskName)
     {
@@ -64,7 +96,7 @@ public class TaskListManager : ScreenState
     public void RemoveTask(GameObject task)
     {
         Destroy(task);
-        DelayUpdateRoutine(1);
+        StartDelayUpdateRoutine(2);
     }
     public void ToggleTaskComplete(TaskObject task)
     {
@@ -93,14 +125,18 @@ public class TaskListManager : ScreenState
         UpdateData();
     }
 
+    ///<summary> will not save </summary>
+    void RemoveAllTasks()
+    {
+        foreach(Transform task in listParent)
+        {
+            Destroy(task.gameObject);
+        }
+    }
+
     void UpdateData()
     {
-        if (GetComponent<TaskListDataManager>() == null)
-        {
-            Debug.LogError("No data manager detected");
-            return;
-        }
-
+        //gather all data from today's list and save it
         TaskListData list = new TaskListData();
         foreach (Transform child in listParent)
         {
@@ -112,9 +148,9 @@ public class TaskListManager : ScreenState
             list.tasks.Add(task);
         }
 
-        GetComponent<TaskListDataManager>().SaveData(list, dayIndex);
+        dataManager.SaveData(list, DayIndex);
     }
-    public void DelayUpdateRoutine(int frames) => StartCoroutine(DelayUpdate(frames));
+    public void StartDelayUpdateRoutine(int frames) => StartCoroutine(DelayUpdate(frames));
     IEnumerator DelayUpdate(int frames)
     {
         for (int i = 0; i < frames; i++)
@@ -129,14 +165,15 @@ public class TaskListManager : ScreenState
         if (collection == null)
             return;
 
+        RemoveAllTasks();
+        //show the task list from "collection" on "dayIndex"
         var taskList = collection.lists[collection.dayIndex].tasks;
         for (int i = 0; i < taskList.Count; i++)
         {
             AddTask(taskList[i]);
         }
-        dayIndex = collection.dayIndex;
+        DayIndex = collection.dayIndex;
     }
 
-    public void InputFieldSetNewTaskName(string name) => newTaskName = name;
 
 }

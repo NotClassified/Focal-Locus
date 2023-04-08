@@ -10,20 +10,18 @@ public class TaskListDataManager : MonoBehaviour
 
     private void Start()
     {
-        if (DataExists())
-        {
-            LoadData();
-        }
+        LoadData();
+        Debug.Log("File Location: " + Application.persistentDataPath);
     }
 
     public void SaveData(TaskListData listData, int dayIndex)
     {
-        DeleteData();
+        DeleteData(); //for overwriting
 
         currentData = SaveListToCollection(currentData, listData, dayIndex);
 
         string json = JsonUtility.ToJson(currentData, true); 
-        Debug.Log("Serialized data: \n" + json);
+        //Debug.Log("Serialized data: \n" + json);
         using (FileStream stream = File.Open(Application.persistentDataPath + "/" + fileName + ".json", 
                                              FileMode.OpenOrCreate, FileAccess.ReadWrite))
         {
@@ -47,7 +45,7 @@ public class TaskListDataManager : MonoBehaviour
         {
             using (StreamReader reader = new StreamReader(stream))
             {
-                string json = reader.ReadToEnd(); 
+                string json = reader.ReadToEnd();
                 Debug.Log("Previously Saved Data: \n" + json);
                 currentData = JsonUtility.FromJson<TaskListCollection>(json);
 
@@ -68,7 +66,7 @@ public class TaskListDataManager : MonoBehaviour
     {
         if (File.Exists(Application.persistentDataPath + "/" + fileName + ".json") == false)
         {
-            Debug.LogError("No data");
+            Debug.LogWarning("No data");
             return false;
         }
         return true;
@@ -76,15 +74,29 @@ public class TaskListDataManager : MonoBehaviour
 
     TaskListCollection SaveListToCollection(TaskListCollection collection, TaskListData listData, int dayIndex)
     {
-        if (collection.dayIndex < collection.lists.Count) //this day has a list
+        if (dayIndex < collection.lists.Count) //this day has a list, overwrite the list with "listData"
         {
-            collection.lists[currentData.dayIndex] = listData;
+            collection.lists[dayIndex] = listData;
             return collection;
         }
-        else //this day has NO list, make a new list:
+        else //this day has NO list, make an empty list:
         {
             collection.lists.Add(new TaskListData());
             return SaveListToCollection(collection, listData, dayIndex);
         }
+    }
+
+    public void ChangeDay(int newDay, int oldDay)
+    {
+        if (currentData.lists.Count <= oldDay)
+            return;
+
+        //copy list from "oldDay" to "newDay" if "newDay" doesn't have a list
+        if (currentData.lists.Count <= newDay) 
+        {
+            currentData = SaveListToCollection(currentData, currentData.lists[oldDay], newDay);
+        }
+        currentData.dayIndex = newDay;
+        GetComponent<TaskListManager>().LoadCollection(currentData);
     }
 }
