@@ -7,4 +7,5 @@ public class TaskListCollection
 {
     public List<TaskListData> lists = new List<TaskListData>();
     public int dayIndex;
+    public DaysOfWeek firstDay; //index 0
 }

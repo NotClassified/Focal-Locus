@@ -7,4 +7,6 @@ public class TaskObjectData
 {
     public string name;
     public bool completed;
+    public string groupName;
+    public bool isGroup;
 }

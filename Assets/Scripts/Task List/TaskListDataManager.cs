@@ -14,11 +14,12 @@ public class TaskListDataManager : MonoBehaviour
         Debug.Log("File Location: " + Application.persistentDataPath);
     }
 
-    public void SaveData(TaskListData listData, int dayIndex)
+    public void SaveData(TaskListData listData, int dayIndex, DaysOfWeek firstDay)
     {
         DeleteData(); //for overwriting
 
         currentData = SaveListToCollection(currentData, listData, dayIndex);
+        currentData.firstDay = firstDay;
 
         string json = JsonUtility.ToJson(currentData, true); 
         //Debug.Log("Serialized data: \n" + json);
@@ -38,7 +39,10 @@ public class TaskListDataManager : MonoBehaviour
     public void LoadData()
     {
         if (!DataExists())
+        {
+            Debug.LogWarning("No data");
             return;
+        }
 
         using (FileStream stream = File.Open(Application.persistentDataPath + "/" + fileName + ".json", 
                                              FileMode.Open, FileAccess.ReadWrite))
@@ -54,7 +58,14 @@ public class TaskListDataManager : MonoBehaviour
         }
     }
 
-    public void DeleteData()
+    public void FormatData()
+    {
+        DeleteData();
+        currentData = new TaskListCollection();
+        SaveData(new TaskListData(), 0, 0);
+        GetComponent<TaskListManager>().LoadCollection(currentData);
+    }
+    void DeleteData()
     {
         if (!DataExists())
             return;
@@ -62,15 +73,7 @@ public class TaskListDataManager : MonoBehaviour
         File.Delete(Application.persistentDataPath + "/" + fileName + ".json");
     }
 
-    bool DataExists()
-    {
-        if (File.Exists(Application.persistentDataPath + "/" + fileName + ".json") == false)
-        {
-            Debug.LogWarning("No data");
-            return false;
-        }
-        return true;
-    }
+    bool DataExists() => File.Exists(Application.persistentDataPath + "/" + fileName + ".json");
 
     TaskListCollection SaveListToCollection(TaskListCollection collection, TaskListData listData, int dayIndex)
     {
@@ -91,12 +94,18 @@ public class TaskListDataManager : MonoBehaviour
         if (currentData.lists.Count <= oldDay)
             return;
 
+        bool newDayCreated = false;
+
         //copy list from "oldDay" to "newDay" if "newDay" doesn't have a list
         if (currentData.lists.Count <= newDay) 
         {
             currentData = SaveListToCollection(currentData, currentData.lists[oldDay], newDay);
+            newDayCreated = true;
         }
         currentData.dayIndex = newDay;
         GetComponent<TaskListManager>().LoadCollection(currentData);
+
+        if (newDayCreated)
+            GetComponent<TaskListManager>().ResetTasks();
     }
 }

@@ -6,9 +6,10 @@ using TMPro;
 
 public class TaskObject : MonoBehaviour
 {
-    TaskListManager manager;
+    protected TaskListManager manager;
 
     public bool completed;
+    public string groupName;
 
     string taskName;
     public string TaskName
@@ -37,6 +38,6 @@ public class TaskObject : MonoBehaviour
     }
     public void ButtonMoveUp() => manager.MoveUpTask(transform);
 
-    public void ButtonRemove() => manager.RemoveTask(gameObject);
+    public void ButtonRemove() => manager.RemoveTask(this);
 
 }
