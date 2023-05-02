@@ -19,16 +19,6 @@ public class NotificationManager : ScreenState
 
     private void Start()
     {
-        //List<string> channels = new List<string>();
-        //channels.Add("None");
-
-        //for (int i = 0; i < ChannelIDs.ids.Length; i++)
-        //{
-        //    channels.Add(ChannelIDs.ids[i]);
-
-        //}
-        //channelSelecter.AddOptions(channels);
-        //channelSelecter.onValueChanged.AddListener(ChangeChannel);
 
         var channel0 = new AndroidNotificationChannel()
         {

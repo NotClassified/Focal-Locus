@@ -12,13 +12,14 @@ public enum DaysOfWeek
 public class TaskListManager : ScreenState
 {
     TaskListDataManager dataManager;
+    ProgressManager progressManager;
 
     [SerializeField] Transform listParent;
     [SerializeField] GameObject taskPrefab;
     [SerializeField] Transform groupListParent;
     [SerializeField] GameObject groupTaskPrefab;
     public List<string> groupsCompleted = new List<string>();
-    string activeGroupName;
+    string activeGroupName = "";
 
     int dayStreak;
     public DaysOfWeek firstDay;
@@ -64,8 +65,10 @@ public class TaskListManager : ScreenState
         if (DayIndex + dayIncrement >= 0)
         {
             dataManager.ChangeDay(DayIndex + dayIncrement, DayIndex);
+            activeGroupName = "";
+            ShowList();
+            StartDelayUpdateRoutine(2);
         }
-        StartDelayUpdateRoutine(2);
     }
     public void SetToday()
     {
@@ -80,12 +83,8 @@ public class TaskListManager : ScreenState
             nextDayButton_Text.text = ">";
     }
 
-
-    public override void OnEnter()
+    private void Awake()
     {
-        base.OnEnter();
-        //NewTaskPromptActive = false;
-        ShowList();
         if (dataManager == null)
         {
             dataManager = GetComponent<TaskListDataManager>();
@@ -93,6 +92,19 @@ public class TaskListManager : ScreenState
             if (dataManager == null)
                 Debug.LogError("No data manager detected");
         }
+        if (progressManager == null)
+        {
+            progressManager = GetComponent<ProgressManager>();
+
+            if (progressManager == null)
+                Debug.LogError("No data manager detected");
+        }
+    }
+
+    public override void OnEnter()
+    {
+        base.OnEnter();
+        ShowList();
     }
 
 
@@ -100,18 +112,21 @@ public class TaskListManager : ScreenState
     {
         GameObject taskObject = Instantiate(taskPrefab, listParent);
         taskObject.GetComponent<TaskObject>().TaskName = taskName;
+        progressManager.UpdateProgress();
     }
     void AddTask(string taskName, string groupName)
     {
         GameObject taskObject = Instantiate(taskPrefab, groupListParent);
         taskObject.GetComponent<TaskObject>().TaskName = taskName;
         taskObject.GetComponent<TaskObject>().groupName = groupName;
+        progressManager.UpdateProgress();
     }
     void AddGroup(string groupName)
     {
         GameObject taskObject = Instantiate(groupTaskPrefab, listParent);
         taskObject.GetComponent<TaskObject>().TaskName = groupName;
         taskObject.GetComponent<TaskObject>().groupName = groupName;
+        progressManager.UpdateProgress();
     }
     void AddTask(TaskObjectData taskData)
     {
@@ -139,6 +154,7 @@ public class TaskListManager : ScreenState
         taskscript.groupName = taskData.groupName;
         if (taskData.completed)
             ToggleTaskComplete(taskscript);
+        progressManager.UpdateProgress();
     }
     public void ConfrimNewTask(string newTaskName)
     {
@@ -146,14 +162,12 @@ public class TaskListManager : ScreenState
             AddTask(newTaskName, activeGroupName);
         else
             AddTask(newTaskName);
-        //NewTaskPromptActive = false;
 
         UpdateData();
     }
     public void ConfrimNewGroup(string newGroupName)
     {
         AddGroup(newGroupName);
-        //NewGroupPromptActive = false;
 
         UpdateData();
     }
@@ -226,6 +240,8 @@ public class TaskListManager : ScreenState
             taskText.fontStyle = FontStyles.Strikethrough;
         else
             taskText.fontStyle = FontStyles.Bold;
+
+        progressManager.UpdateProgress();
     }
     public void MoveUpTask(Transform task)
     {
@@ -251,6 +267,7 @@ public class TaskListManager : ScreenState
                 Destroy(task.gameObject);
             }
         }
+        groupsCompleted.Clear();
     }
 
     void UpdateData()
@@ -317,7 +334,11 @@ public class TaskListManager : ScreenState
         groupListParent.parent.gameObject.SetActive(false);
         addGroup_Button.interactable = true;
 
-        ToggleGroupCompleteStatus(activeGroupName, IsGroupCompleted(activeGroupName));
+        if (!activeGroupName.Equals(""))
+        {
+            ToggleGroupCompleteStatus(activeGroupName, IsGroupCompleted(activeGroupName));
+        }
+        progressManager.UpdateProgress();
     }
     public void ShowList(string groupName)
     {
@@ -334,5 +355,6 @@ public class TaskListManager : ScreenState
             }
         }
         activeGroupName = groupName;
+        progressManager.UpdateProgress();
     }
 }
