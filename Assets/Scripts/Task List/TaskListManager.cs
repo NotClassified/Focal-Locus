@@ -188,6 +188,7 @@ public class TaskListManager : ScreenState
 
         Destroy(task.gameObject);
         StartDelayUpdateRoutine(2);
+        progressManager.UpdateProgress();
     }
     bool IsGroupCompleted(string groupName)
     {
@@ -224,6 +225,7 @@ public class TaskListManager : ScreenState
                 task.ButtonToggleTaskStatus();
             }
         }
+        progressManager.UpdateProgress();
     }
     public void ToggleTaskComplete(TaskObject task)
     {
