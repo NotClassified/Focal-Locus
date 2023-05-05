@@ -7,7 +7,6 @@ using TMPro;
 public class ProgressManager : MonoBehaviour
 {
     [SerializeField] Transform listParent;
-    [SerializeField] Transform groupListParent;
 
     Slider progressBar;
     TextMeshProUGUI progressText;
@@ -16,37 +15,23 @@ public class ProgressManager : MonoBehaviour
     {
         progressBar = transform.Find("Progress Bar").GetComponent<Slider>();
         progressText = progressBar.transform.Find("Text").GetComponent<TextMeshProUGUI>();
+
+        TaskListManager.ListChanged += UpdateProgress;
     }
+    private void OnDestroy() => TaskListManager.ListChanged -= UpdateProgress;
 
     public void UpdateProgress()
     {
         int total = 0;
         int completed = 0;
 
-        if (groupListParent.parent.gameObject.activeSelf)
+        foreach (TaskActions task in listParent.GetComponentsInChildren<TaskActions>())
         {
-            foreach (Transform task in groupListParent)
+            if (task.gameObject.activeSelf)
             {
-                TaskObject taskScript = task.GetComponent<TaskObject>();
-                if (taskScript != null && task.gameObject.activeSelf)
-                {
-                    total++;
-                    if (task.GetComponent<TaskObject>().completed)
-                        completed++;
-                }
-            }
-        }
-        else
-        {
-            foreach (Transform task in listParent)
-            {
-                TaskObject taskScript = task.GetComponent<TaskObject>();
-                if (taskScript != null)
-                {
-                    total++;
-                    if (task.GetComponent<TaskObject>().completed)
-                        completed++;
-                }
+                total++;
+                if (task.taskData.completed)
+                    completed++;
             }
         }
         if (total > 0)

@@ -7,6 +7,12 @@ public class TaskObjectData
 {
     public string name;
     public bool completed;
-    public string groupName;
-    public bool isGroup;
+    public TaskObjectData parent = null;
+
+    public TaskObjectData(string name, bool completed, TaskObjectData parent)
+    {
+        this.name = name;
+        this.completed = completed;
+        this.parent = parent;
+    }
 }

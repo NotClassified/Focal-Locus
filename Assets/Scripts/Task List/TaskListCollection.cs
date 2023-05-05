@@ -6,6 +6,6 @@ using UnityEngine;
 public class TaskListCollection
 {
     public List<TaskListData> lists = new List<TaskListData>();
-    public int dayIndex;
+    public int todayIndex;
     public DaysOfWeek firstDay; //index 0
 }

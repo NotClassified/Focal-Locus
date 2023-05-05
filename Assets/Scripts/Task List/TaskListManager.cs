@@ -12,14 +12,12 @@ public enum DaysOfWeek
 public class TaskListManager : ScreenState
 {
     TaskListDataManager dataManager;
-    ProgressManager progressManager;
+
+    public static event System.Action ListChanged;
 
     [SerializeField] Transform listParent;
     [SerializeField] GameObject taskPrefab;
-    [SerializeField] Transform groupListParent;
-    [SerializeField] GameObject groupTaskPrefab;
-    public List<string> groupsCompleted = new List<string>();
-    string activeGroupName = "";
+    TaskObjectData activeParentTask = null;
 
     int dayStreak;
     public DaysOfWeek firstDay;
@@ -43,30 +41,16 @@ public class TaskListManager : ScreenState
 
     public void ResetTasks()
     {
-        foreach(Transform child in listParent)
+        foreach (TaskActions task in listParent.GetComponentsInChildren<TaskActions>())
         {
-            TaskObject task = child.GetComponent<TaskObject>();
-            if (task.completed)
-            {
-                ToggleTaskComplete(task);
-            }
-        }
-        foreach (Transform childInGroup in groupListParent)
-        {
-            TaskObject task = childInGroup.GetComponent<TaskObject>();
-            if (task != null && task.completed)
-            {
-                ToggleTaskComplete(task);
-            }
+            CompleteTask(task.taskData);
         }
     }
     public void ButtonChangeDay(int dayIncrement)
     {
-        if (DayIndex + dayIncrement >= 0)
+        if (DayIndex + dayIncrement >= 0 && listParent.GetComponentsInChildren<TaskActions>().Length > 0)
         {
             dataManager.ChangeDay(DayIndex + dayIncrement, DayIndex);
-            activeGroupName = "";
-            ShowList();
             StartDelayUpdateRoutine(2);
         }
     }
@@ -92,216 +76,78 @@ public class TaskListManager : ScreenState
             if (dataManager == null)
                 Debug.LogError("No data manager detected");
         }
-        if (progressManager == null)
-        {
-            progressManager = GetComponent<ProgressManager>();
-
-            if (progressManager == null)
-                Debug.LogError("No data manager detected");
-        }
+        //ListChanged += ActionMessage;
     }
+    void ActionMessage() => Debug.Log("Action");
 
-    public override void OnEnter()
+    void AddTask(TaskObjectData _taskData)
     {
-        base.OnEnter();
-        ShowList();
-    }
-
-
-    void AddTask(string taskName)
-    {
-        GameObject taskObject = Instantiate(taskPrefab, listParent);
-        taskObject.GetComponent<TaskObject>().TaskName = taskName;
-        progressManager.UpdateProgress();
-    }
-    void AddTask(string taskName, string groupName)
-    {
-        GameObject taskObject = Instantiate(taskPrefab, groupListParent);
-        taskObject.GetComponent<TaskObject>().TaskName = taskName;
-        taskObject.GetComponent<TaskObject>().groupName = groupName;
-        progressManager.UpdateProgress();
-    }
-    void AddGroup(string groupName)
-    {
-        GameObject taskObject = Instantiate(groupTaskPrefab, listParent);
-        taskObject.GetComponent<TaskObject>().TaskName = groupName;
-        taskObject.GetComponent<TaskObject>().groupName = groupName;
-        progressManager.UpdateProgress();
-    }
-    void AddTask(TaskObjectData taskData)
-    {
-        TaskObject taskscript;
-        if (taskData.isGroup)
-        {
-            taskscript = Instantiate(groupTaskPrefab, listParent).GetComponent<TaskObject>();
-            taskscript.TaskName = taskData.groupName;
-            if (taskData.completed)
-            {
-                groupsCompleted.Add(taskData.groupName);
-            }
-        }
-        else
-        {
-            if (taskData.groupName.Equals(""))
-                taskscript = Instantiate(taskPrefab, listParent).GetComponent<TaskObject>();
-            else //task is in a group
-            {
-                taskscript = Instantiate(taskPrefab, groupListParent).GetComponent<TaskObject>();
-            }
-
-            taskscript.TaskName = taskData.name;
-        }
-        taskscript.groupName = taskData.groupName;
-        if (taskData.completed)
-            ToggleTaskComplete(taskscript);
-        progressManager.UpdateProgress();
+        TaskActions task = Instantiate(taskPrefab, listParent).GetComponent<TaskActions>();
+        task.taskData = _taskData;
     }
     public void ConfrimNewTask(string newTaskName)
     {
-        if (groupListParent.parent.gameObject.activeSelf)
-            AddTask(newTaskName, activeGroupName);
-        else
-            AddTask(newTaskName);
-
-        UpdateData();
-    }
-    public void ConfrimNewGroup(string newGroupName)
-    {
-        AddGroup(newGroupName);
+        TaskObjectData newTask = new TaskObjectData(newTaskName, false, activeParentTask);
+        AddTask(newTask);
 
         UpdateData();
     }
 
-    public void RemoveTask(TaskObject task)
+    public void CompleteTask(TaskObjectData taskData)
     {
-        if (task is TaskGroupObject)
+        taskData.completed = !taskData.completed;
+        UpdateData();
+    }
+    public void RemoveTask(TaskActions task)
+    {
+        if (task.parentTask != null)
         {
-            foreach (Transform child in groupListParent)
-            {
-                TaskObject childScript = child.GetComponent<TaskObject>();
-                if (childScript != null && childScript.groupName.Equals(task.groupName))
-                {
-                    Destroy(child.gameObject);
-                }
-            }
+            RemoveTask(task.parentTask);
         }
-
         Destroy(task.gameObject);
         StartDelayUpdateRoutine(2);
-        progressManager.UpdateProgress();
-    }
-    bool IsGroupCompleted(string groupName)
-    {
-        foreach (Transform child in groupListParent)
-        {
-            TaskObject task = child.GetComponent<TaskObject>();
-            if (task != null && task.groupName.Equals(groupName) && !task.completed)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-    void ToggleGroupCompleteStatus(string groupName, bool complete)
-    {
-        if (complete) //group completed
-        {
-            if (groupsCompleted.Contains(groupName))
-                    return; //group is already completed
-            groupsCompleted.Add(groupName);
-        }
-        else //group not completed
-        {
-            if (!groupsCompleted.Contains(groupName))
-                return; //group hasn't been completed yet
-            groupsCompleted.Remove(groupName);
-        }
-
-        foreach (Transform child in listParent)
-        {
-            TaskGroupObject task = child.GetComponent<TaskGroupObject>();
-            if (task != null && task.TaskName.Equals(groupName))
-            {
-                task.ButtonToggleTaskStatus();
-            }
-        }
-        progressManager.UpdateProgress();
-    }
-    public void ToggleTaskComplete(TaskObject task)
-    {
-        task.completed = !task.completed;
-        //darken task when completed
-        Image button = task.transform.GetChild(0).GetComponent<Image>();
-        var alpha = button.color;
-        alpha.a = task.completed ? .5f : 1f;
-        button.color = alpha;
-
-        //slash text when completed
-        TextMeshProUGUI taskText = task.transform.GetChild(0).GetComponentInChildren<TextMeshProUGUI>();
-        if (task.completed)
-            taskText.fontStyle = FontStyles.Strikethrough;
-        else
-            taskText.fontStyle = FontStyles.Bold;
-
-        progressManager.UpdateProgress();
+        //progressManager.UpdateProgress();
     }
     public void MoveUpTask(Transform task)
     {
         int index = task.GetSiblingIndex();
         if (index > 0)
         {
+            while (!listParent.GetChild(index - 1).gameObject.activeSelf)
+            {
+                index--;
+                if (index <= 0)
+                    return; //the task is at the top of the shown list
+            }
             task.SetSiblingIndex(index - 1);
         }
         UpdateData();
     }
 
-    ///<summary> will not save </summary>
-    void RemoveAllTasks()
+
+    void RemoveAllTasks() //note: won't save
     {
         foreach(Transform task in listParent)
         {
+            task.gameObject.SetActive(false);
             Destroy(task.gameObject);
         }
-        foreach (Transform task in groupListParent)
-        {
-            if (task.GetComponent<TaskObject>() != null)
-            {
-                Destroy(task.gameObject);
-            }
-        }
-        groupsCompleted.Clear();
     }
 
     void UpdateData()
     {
         //gather all data from today's list and save it
         TaskListData list = new TaskListData();
-        foreach (Transform child in listParent)
+        TaskActions[] taskScripts = listParent.GetComponentsInChildren<TaskActions>();
+        list.tasks = new TaskObjectData[taskScripts.Length];
+
+        for (int i = 0; i < taskScripts.Length; i++)
         {
-            TaskObject taskObj = child.GetComponent<TaskObject>();
-            TaskObjectData task = new TaskObjectData();
-
-            task.name = taskObj.TaskName;
-            task.completed = taskObj.completed;
-            task.groupName = taskObj.groupName;
-            task.isGroup = taskObj is TaskGroupObject;
-            list.tasks.Add(task);
+            list.tasks[i] = taskScripts[i].taskData;
         }
-        foreach (Transform child in groupListParent)
-        {
-            TaskObject taskObj = child.GetComponent<TaskObject>();
-            if (taskObj != null)
-            {
-                TaskObjectData task = new TaskObjectData();
-
-                task.name = taskObj.TaskName;
-                task.completed = taskObj.completed;
-                task.groupName = taskObj.groupName;
-                list.tasks.Add(task);
-            }
-        }
-
         dataManager.SaveData(list, DayIndex, firstDay);
+
+        ListChanged();
     }
     public void StartDelayUpdateRoutine(int frames) => StartCoroutine(DelayUpdate(frames));
     IEnumerator DelayUpdate(int frames)
@@ -320,43 +166,17 @@ public class TaskListManager : ScreenState
 
         RemoveAllTasks();
         //show the task list from "collection" on "dayIndex"
-        var taskList = collection.lists[collection.dayIndex].tasks;
-        for (int i = 0; i < taskList.Count; i++)
+        if (collection.lists.Count > 0)
         {
-            AddTask(taskList[i]);
-        }
-        firstDay = collection.firstDay;
-        DayIndex = collection.dayIndex;
-        SetToday();
-    }
-
-    public void ShowList()
-    {
-        listParent.parent.gameObject.SetActive(true);
-        groupListParent.parent.gameObject.SetActive(false);
-        addGroup_Button.interactable = true;
-
-        if (!activeGroupName.Equals(""))
-        {
-            ToggleGroupCompleteStatus(activeGroupName, IsGroupCompleted(activeGroupName));
-        }
-        progressManager.UpdateProgress();
-    }
-    public void ShowList(string groupName)
-    {
-        listParent.parent.gameObject.SetActive(false);
-        groupListParent.parent.gameObject.SetActive(true);
-        addGroup_Button.interactable = false;
-
-        foreach (Transform child in groupListParent)
-        {
-            TaskObject task = child.GetComponent<TaskObject>();
-            if (task != null)
+            TaskObjectData[] taskList = collection.lists[collection.todayIndex].tasks;
+            for (int i = 0; i < taskList.Length; i++)
             {
-                task.gameObject.SetActive(task.groupName.Equals(groupName));
+                AddTask(taskList[i]);
             }
         }
-        activeGroupName = groupName;
-        progressManager.UpdateProgress();
+        firstDay = collection.firstDay;
+        DayIndex = collection.todayIndex;
+        SetToday();
+        ListChanged();
     }
 }

@@ -2199,7 +2199,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &756295997
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6084,10 +6084,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   listParent: {fileID: 1568766776}
   taskPrefab: {fileID: 7924161485148026866, guid: 8f88ad3408c06dd408f5530ed7f8061e, type: 3}
-  groupListParent: {fileID: 1947314565}
-  groupTaskPrefab: {fileID: 7924161485148026866, guid: 16b3a65272ca377458318e570b4e014f, type: 3}
-  groupsCompleted: []
-  firstDay: 1
+  firstDay: 0
   dayIndex_text: {fileID: 1630486272}
   dayName_text: {fileID: 422776761}
   nextDayButton_Text: {fileID: 2130116280}
@@ -6106,7 +6103,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentData:
     lists: []
-    dayIndex: 0
+    todayIndex: 0
     firstDay: 0
   fileName: TaskListCollection
 --- !u!114 &1769535428
@@ -6135,7 +6132,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   listParent: {fileID: 1568766776}
-  groupListParent: {fileID: 1947314565}
 --- !u!1 &1821567083
 GameObject:
   m_ObjectHideFlags: 0

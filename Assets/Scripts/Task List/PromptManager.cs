@@ -71,9 +71,9 @@ public class PromptManager : MonoBehaviour
                     case Prompt.AddTask:
                         taskManager.ConfrimNewTask(inputFieldValue);
                         break;
-                    case Prompt.AddGroup:
-                        taskManager.ConfrimNewGroup(inputFieldValue);
-                        break;
+                    //case Prompt.AddGroup:
+                    //    taskManager.ConfrimNewGroup(inputFieldValue);
+                        //break;
                     case Prompt.FormatData:
                         dataTaskManager.FormatData();
                         break;

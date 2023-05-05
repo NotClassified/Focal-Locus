@@ -5,9 +5,15 @@ using System.IO;
 
 public class TaskListDataManager : MonoBehaviour
 {
+    TaskListManager listManager;
+
     public TaskListCollection currentData = new TaskListCollection();
     [SerializeField] string fileName;
 
+    private void Awake()
+    {
+        listManager = GetComponent<TaskListManager>();
+    }
     private void Start()
     {
         LoadData();
@@ -21,8 +27,8 @@ public class TaskListDataManager : MonoBehaviour
         currentData = SaveListToCollection(currentData, listData, dayIndex);
         currentData.firstDay = firstDay;
 
-        string json = JsonUtility.ToJson(currentData, true); 
-        //Debug.Log("Serialized data: \n" + json);
+        string json = JsonUtility.ToJson(currentData, true);
+        Debug.Log("Serialized data: \n" + json);
         using (FileStream stream = File.Open(Application.persistentDataPath + "/" + fileName + ".json", 
                                              FileMode.OpenOrCreate, FileAccess.ReadWrite))
         {
@@ -53,7 +59,7 @@ public class TaskListDataManager : MonoBehaviour
                 Debug.Log("Previously Saved Data: \n" + json);
                 currentData = JsonUtility.FromJson<TaskListCollection>(json);
 
-                GetComponent<TaskListManager>().LoadCollection(currentData);
+                listManager.LoadCollection(currentData);
             }
         }
     }
@@ -62,8 +68,8 @@ public class TaskListDataManager : MonoBehaviour
     {
         DeleteData();
         currentData = new TaskListCollection();
-        SaveData(new TaskListData(), 0, 0);
-        GetComponent<TaskListManager>().LoadCollection(currentData);
+
+        listManager.LoadCollection(currentData);
     }
     void DeleteData()
     {
@@ -77,35 +83,43 @@ public class TaskListDataManager : MonoBehaviour
 
     TaskListCollection SaveListToCollection(TaskListCollection collection, TaskListData listData, int dayIndex)
     {
-        if (dayIndex < collection.lists.Count) //this day has a list, overwrite the list with "listData"
-        {
-            collection.lists[dayIndex] = listData;
-            return collection;
-        }
-        else //this day has NO list, make an empty list:
+        //if "dayIndex" does not have a list, make empty lists for each day until "dayIndex" does have a list
+        while (collection.lists.Count <= dayIndex)
         {
             collection.lists.Add(new TaskListData());
-            return SaveListToCollection(collection, listData, dayIndex);
         }
+
+        TaskListData listCopy = collection.lists[dayIndex];
+        //copy "listData" to "listCopy" ("dayIndex" list)
+        listCopy.tasks = new TaskObjectData[listData.tasks.Length];
+        for (int i = 0; i < listCopy.tasks.Length; i++)
+        {
+            listCopy.tasks[i] = new TaskObjectData(listData.tasks[i].name, 
+                                                     listData.tasks[i].completed, 
+                                                       listData.tasks[i].parent);
+        }
+        return collection;
     }
 
     public void ChangeDay(int newDay, int oldDay)
     {
         if (currentData.lists.Count <= oldDay)
+        {
+            Debug.LogError("the list for \"oldDay\" does not exist");
             return;
+        }
 
-        bool newDayCreated = false;
 
-        //copy list from "oldDay" to "newDay" if "newDay" doesn't have a list
+        //if "newDay" doesn't have a list, copy list from "oldDay" to "newDay" and reset all "newDay" tasks
         if (currentData.lists.Count <= newDay) 
         {
             currentData = SaveListToCollection(currentData, currentData.lists[oldDay], newDay);
-            newDayCreated = true;
+            foreach (TaskObjectData task in currentData.lists[newDay].tasks)
+            {
+                task.completed = false;
+            }
         }
-        currentData.dayIndex = newDay;
-        GetComponent<TaskListManager>().LoadCollection(currentData);
-
-        if (newDayCreated)
-            GetComponent<TaskListManager>().ResetTasks();
+        currentData.todayIndex = newDay;
+        listManager.LoadCollection(currentData);
     }
 }
