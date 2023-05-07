@@ -5,5 +5,5 @@ using UnityEngine;
 [System.Serializable]
 public class TaskListData
 {
-    public TaskObjectData[] tasks;
+    public List<TaskObjectData> allTasks = new List<TaskObjectData>();
 }

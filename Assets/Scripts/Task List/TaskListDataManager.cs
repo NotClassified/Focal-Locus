@@ -20,12 +20,14 @@ public class TaskListDataManager : MonoBehaviour
         Debug.Log("File Location: " + Application.persistentDataPath);
     }
 
-    public void SaveData(TaskListData listData, int dayIndex, DaysOfWeek firstDay)
+    public void SaveData()
     {
         DeleteData(); //for overwriting
 
-        currentData = SaveListToCollection(currentData, listData, dayIndex);
-        currentData.firstDay = firstDay;
+        if (currentData == null)
+        {
+            currentData = new TaskListCollection();
+        }
 
         string json = JsonUtility.ToJson(currentData, true);
         Debug.Log("Serialized data: \n" + json);
@@ -59,7 +61,7 @@ public class TaskListDataManager : MonoBehaviour
                 Debug.Log("Previously Saved Data: \n" + json);
                 currentData = JsonUtility.FromJson<TaskListCollection>(json);
 
-                listManager.LoadCollection(currentData);
+                listManager.LoadCurrentCollection();
             }
         }
     }
@@ -69,7 +71,7 @@ public class TaskListDataManager : MonoBehaviour
         DeleteData();
         currentData = new TaskListCollection();
 
-        listManager.LoadCollection(currentData);
+        listManager.LoadCurrentCollection();
     }
     void DeleteData()
     {
@@ -89,16 +91,71 @@ public class TaskListDataManager : MonoBehaviour
             collection.lists.Add(new TaskListData());
         }
 
-        TaskListData listCopy = collection.lists[dayIndex];
-        //copy "listData" to "listCopy" ("dayIndex" list)
-        listCopy.tasks = new TaskObjectData[listData.tasks.Length];
-        for (int i = 0; i < listCopy.tasks.Length; i++)
+        collection.lists[dayIndex].allTasks.Clear();
+        //copy "listData" to the "dayIndex" list
+        foreach (TaskObjectData task in listData.allTasks)
         {
-            listCopy.tasks[i] = new TaskObjectData(listData.tasks[i].name, 
-                                                     listData.tasks[i].completed, 
-                                                       listData.tasks[i].parent);
+            collection.lists[dayIndex].allTasks.Add(new TaskObjectData(task));
         }
+
         return collection;
+    }
+
+    public void OverwriteListLayer(TaskListData layerData, string layerID)
+    {
+        //if "dayIndex" does not have a list, make empty lists for each day until "dayIndex" does have a list
+        while (currentData.lists.Count <= currentData.todayIndex)
+        {
+            currentData.lists.Add(new TaskListData());
+        }
+
+        //delete all tasks in this layer
+        TaskListData list = currentData.lists[currentData.todayIndex];
+        for (int i = 0; i < list.allTasks.Count; i++)
+        {
+            if (TaskListManager.IsInsideLayer(list.allTasks[i].layerID, layerID))
+            {
+                list.allTasks.Remove(list.allTasks[i]);
+                i--;
+            }
+        }
+        //paste in tasks for this layer
+        foreach (TaskObjectData task in layerData.allTasks)
+        {
+            list.allTasks.Add(task);
+        }
+        SaveData();
+    }
+    public void RemoveTask(string taskID)
+    {
+        //SortListFromTopLayerToBottomLayer(currentData.lists[currentData.todayIndex]);
+
+        TaskListData list = currentData.lists[currentData.todayIndex];
+        for (int i = 0; i < list.allTasks.Count; i++)
+        {
+            if (list.allTasks[i].layerID.Equals(taskID))
+            {
+                list.allTasks.Remove(list.allTasks[i]);
+                break;
+            }
+        }
+    }
+
+    void SortListFromTopLayerToBottomLayer(TaskListData list)
+    {
+        List<TaskObjectData> newOrder = new List<TaskObjectData>();
+        int layer = 1; //top layer
+        while (newOrder.Count < list.allTasks.Count)
+        {
+            foreach (TaskObjectData task in list.allTasks)
+            {
+                if (task.layerID.Length == layer)
+                    newOrder.Add(task);
+            }
+            layer++;
+        }
+
+        list.allTasks = newOrder;
     }
 
     public void ChangeDay(int newDay, int oldDay)
@@ -114,12 +171,12 @@ public class TaskListDataManager : MonoBehaviour
         if (currentData.lists.Count <= newDay) 
         {
             currentData = SaveListToCollection(currentData, currentData.lists[oldDay], newDay);
-            foreach (TaskObjectData task in currentData.lists[newDay].tasks)
+            foreach (TaskObjectData task in currentData.lists[newDay].allTasks)
             {
                 task.completed = false;
             }
         }
         currentData.todayIndex = newDay;
-        listManager.LoadCollection(currentData);
+        listManager.LoadCurrentCollection();
     }
 }

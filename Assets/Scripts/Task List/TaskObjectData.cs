@@ -7,12 +7,20 @@ public class TaskObjectData
 {
     public string name;
     public bool completed;
-    public TaskObjectData parent = null;
+    public string layerID;
+    public bool hasChildren;
 
-    public TaskObjectData(string name, bool completed, TaskObjectData parent)
+    public TaskObjectData(string name, bool completed, string id, bool hasChildren)
     {
         this.name = name;
         this.completed = completed;
-        this.parent = parent;
+        this.layerID = id;
+        this.hasChildren = hasChildren;
+    }
+    public TaskObjectData(TaskObjectData copy)
+    {
+        this.name = copy.name;
+        this.completed = copy.completed;
+        this.layerID = copy.layerID;
     }
 }

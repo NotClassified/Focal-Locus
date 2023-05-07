@@ -9,7 +9,6 @@ public class TaskActions : MonoBehaviour
     protected TaskListManager manager;
 
     public TaskObjectData taskData;
-    public TaskActions parentTask;
 
     private void Start()
     {
@@ -42,6 +41,11 @@ public class TaskActions : MonoBehaviour
         //slash text when completed
         TextMeshProUGUI taskText = transform.GetChild(0).GetComponentInChildren<TextMeshProUGUI>();
         taskText.fontStyle = taskData.completed ? FontStyles.Strikethrough : FontStyles.Bold;
+    }
+
+    public void ButtonLayerAction()
+    {
+        manager.ChangeLayer(taskData.layerID);
     }
 
     public void ButtonToggleTaskStatus()

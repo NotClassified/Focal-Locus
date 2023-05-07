@@ -17,7 +17,7 @@ public class TaskListManager : ScreenState
 
     [SerializeField] Transform listParent;
     [SerializeField] GameObject taskPrefab;
-    TaskObjectData activeParentTask = null;
+    string activeLayerID = "";
 
     int dayStreak;
     public DaysOfWeek firstDay;
@@ -46,6 +46,7 @@ public class TaskListManager : ScreenState
             CompleteTask(task.taskData);
         }
     }
+
     public void ButtonChangeDay(int dayIncrement)
     {
         if (DayIndex + dayIncrement >= 0 && listParent.GetComponentsInChildren<TaskActions>().Length > 0)
@@ -87,8 +88,15 @@ public class TaskListManager : ScreenState
     }
     public void ConfrimNewTask(string newTaskName)
     {
-        TaskObjectData newTask = new TaskObjectData(newTaskName, false, activeParentTask);
-        AddTask(newTask);
+        //get new ID for task
+        string newTaskID = activeLayerID + listParent.childCount;
+
+        AddTask(new TaskObjectData(newTaskName, false, newTaskID, false));
+        //if this is the first child of a parent, check "hasChildren" on parent
+        if (newTaskID.Length > 1 && GetLayerIDDigit(newTaskID, newTaskID.Length - 1) == 0)
+        {
+            GetParentOfLayer(newTaskID.Substring(0, newTaskID.Length - 1)).hasChildren = true;
+        }
 
         UpdateData();
     }
@@ -100,13 +108,23 @@ public class TaskListManager : ScreenState
     }
     public void RemoveTask(TaskActions task)
     {
-        if (task.parentTask != null)
-        {
-            RemoveTask(task.parentTask);
-        }
+        if (task.taskData.hasChildren)
+            RemoveChildren(task.taskData.layerID);
+
+        dataManager.RemoveTask(task.taskData.layerID);
+
+        task.gameObject.SetActive(false);
         Destroy(task.gameObject);
+        ResetTaskLayerIDs();
         StartDelayUpdateRoutine(2);
-        //progressManager.UpdateProgress();
+    }
+    void RemoveChildren(string parentID)
+    {
+        foreach (TaskActions actionScript in listParent.GetComponentsInChildren<TaskActions>())
+        {
+            if (IsInsideLayer(actionScript.taskData.layerID, parentID))
+                RemoveTask(actionScript);
+        }
     }
     public void MoveUpTask(Transform task)
     {
@@ -123,9 +141,75 @@ public class TaskListManager : ScreenState
         }
         UpdateData();
     }
+    public static bool IsInsideLayer(string taskID, string layerID)
+    {
+        if (taskID == null)
+            taskID = "";
 
+        return taskID.Length == layerID.Length + 1 && taskID.Substring(0, taskID.Length - 1).Equals(layerID);
+    }
+    public TaskObjectData GetParentOfLayer(string layerID)
+    {
+        foreach (TaskObjectData task in dataManager.currentData.lists[dayIndex].allTasks)
+        {
+            if (task.layerID.Equals(layerID))
+                return task;
+        }
 
-    void RemoveAllTasks() //note: won't save
+        Debug.LogError("no parent found");
+        return null;
+    }
+    public static int GetLayerIDDigit(string id, int digitIndex)
+    {
+        if (id == null || id.Length <= digitIndex)
+        {
+            Debug.LogError("invalid ID");
+            return 0;
+        }
+
+        return int.Parse(id.Substring(digitIndex, digitIndex + 1));
+    }
+    void ResetTaskLayerIDs()
+    {
+        //gather all remaining tasks
+        List<TaskActions> actionScripts = new List<TaskActions>();
+        for (int i = 0; i < listParent.childCount; i++)
+        {
+            if (listParent.GetChild(i).gameObject.activeSelf)
+                actionScripts.Add(listParent.GetChild(i).GetComponent<TaskActions>());
+        }
+        for (int i = 0; i < actionScripts.Count; i++)
+        {
+            string newID = actionScripts[i].taskData.layerID;
+            newID = newID.Substring(0, newID.Length - 1) + i;
+            actionScripts[i].taskData.layerID = newID;
+        }
+    }
+
+    public void ChangeLayer(string newLayerID)
+    {
+        TaskListCollection collection = dataManager.currentData;
+        if (collection == null)
+            return;
+
+        ClearActiveTasks();
+        foreach (TaskObjectData task in collection.lists[collection.todayIndex].allTasks)
+        {
+            if (IsInsideLayer(task.layerID, newLayerID))
+                AddTask(task);
+        }
+        activeLayerID = newLayerID;
+        ListChanged();
+    }
+    public void Button_LeaveActiveLayer()
+    {
+        if (activeLayerID.Equals(""))
+            return;
+
+        ChangeLayer(activeLayerID.Substring(0, activeLayerID.Length - 1));
+    }
+
+    void ClearActiveTasks()
     {
         foreach(Transform task in listParent)
         {
@@ -137,15 +221,14 @@ public class TaskListManager : ScreenState
     void UpdateData()
     {
         //gather all data from today's list and save it
-        TaskListData list = new TaskListData();
-        TaskActions[] taskScripts = listParent.GetComponentsInChildren<TaskActions>();
-        list.tasks = new TaskObjectData[taskScripts.Length];
+        TaskListData activeLayer = new TaskListData();
 
-        for (int i = 0; i < taskScripts.Length; i++)
+        TaskActions[] taskActionScripts = listParent.GetComponentsInChildren<TaskActions>();
+        foreach (TaskActions actionScript in taskActionScripts)
         {
-            list.tasks[i] = taskScripts[i].taskData;
+            activeLayer.allTasks.Add(actionScript.taskData);
         }
-        dataManager.SaveData(list, DayIndex, firstDay);
+        dataManager.OverwriteListLayer(activeLayer, activeLayerID);
 
         ListChanged();
     }
@@ -159,24 +242,23 @@ public class TaskListManager : ScreenState
         UpdateData();
     }
 
-    public void LoadCollection(TaskListCollection collection)
+    public void LoadCurrentCollection()
     {
+        TaskListCollection collection = dataManager.currentData;
         if (collection == null)
             return;
 
-        RemoveAllTasks();
         //show the task list from "collection" on "dayIndex"
-        if (collection.lists.Count > 0)
+        if (collection.lists.Count > collection.todayIndex) //make sure this collection has enough lists
+            ChangeLayer(""); //show top layer
+        else
         {
-            TaskObjectData[] taskList = collection.lists[collection.todayIndex].tasks;
-            for (int i = 0; i < taskList.Length; i++)
-            {
-                AddTask(taskList[i]);
-            }
+            activeLayerID = "";
+            ClearActiveTasks(); //no tasks for this list
         }
+
         firstDay = collection.firstDay;
         DayIndex = collection.todayIndex;
         SetToday();
-        ListChanged();
     }
 }
