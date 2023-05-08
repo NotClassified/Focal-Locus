@@ -59,6 +59,7 @@ public class TaskListManager : ScreenState
                 ToggleTaskComplete(task);
             }
         }
+        groupsCompleted.Clear();
     }
     public void ButtonChangeDay(int dayIncrement)
     {
@@ -112,21 +113,18 @@ public class TaskListManager : ScreenState
     {
         GameObject taskObject = Instantiate(taskPrefab, listParent);
         taskObject.GetComponent<TaskObject>().TaskName = taskName;
-        progressManager.UpdateProgress();
     }
     void AddTask(string taskName, string groupName)
     {
         GameObject taskObject = Instantiate(taskPrefab, groupListParent);
         taskObject.GetComponent<TaskObject>().TaskName = taskName;
         taskObject.GetComponent<TaskObject>().groupName = groupName;
-        progressManager.UpdateProgress();
     }
     void AddGroup(string groupName)
     {
         GameObject taskObject = Instantiate(groupTaskPrefab, listParent);
         taskObject.GetComponent<TaskObject>().TaskName = groupName;
         taskObject.GetComponent<TaskObject>().groupName = groupName;
-        progressManager.UpdateProgress();
     }
     void AddTask(TaskObjectData taskData)
     {
@@ -154,7 +152,6 @@ public class TaskListManager : ScreenState
         taskscript.groupName = taskData.groupName;
         if (taskData.completed)
             ToggleTaskComplete(taskscript);
-        progressManager.UpdateProgress();
     }
     public void ConfrimNewTask(string newTaskName)
     {
@@ -260,12 +257,14 @@ public class TaskListManager : ScreenState
     {
         foreach(Transform task in listParent)
         {
+            task.gameObject.SetActive(false);
             Destroy(task.gameObject);
         }
         foreach (Transform task in groupListParent)
         {
             if (task.GetComponent<TaskObject>() != null)
             {
+                task.gameObject.SetActive(false);
                 Destroy(task.gameObject);
             }
         }
@@ -302,6 +301,7 @@ public class TaskListManager : ScreenState
         }
 
         dataManager.SaveData(list, DayIndex, firstDay);
+        progressManager.UpdateProgress();
     }
     public void StartDelayUpdateRoutine(int frames) => StartCoroutine(DelayUpdate(frames));
     IEnumerator DelayUpdate(int frames)
@@ -319,6 +319,7 @@ public class TaskListManager : ScreenState
             return;
 
         RemoveAllTasks();
+        print(listParent.childCount);
         //show the task list from "collection" on "dayIndex"
         var taskList = collection.lists[collection.dayIndex].tasks;
         for (int i = 0; i < taskList.Count; i++)
@@ -328,6 +329,7 @@ public class TaskListManager : ScreenState
         firstDay = collection.firstDay;
         DayIndex = collection.dayIndex;
         SetToday();
+        progressManager.UpdateProgress();
     }
 
     public void ShowList()

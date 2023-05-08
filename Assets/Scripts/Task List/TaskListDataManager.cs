@@ -21,8 +21,8 @@ public class TaskListDataManager : MonoBehaviour
         currentData = SaveListToCollection(currentData, listData, dayIndex);
         currentData.firstDay = firstDay;
 
-        string json = JsonUtility.ToJson(currentData, true); 
-        //Debug.Log("Serialized data: \n" + json);
+        string json = JsonUtility.ToJson(currentData, true);
+        Debug.Log("Serialized data: \n" + json);
         using (FileStream stream = File.Open(Application.persistentDataPath + "/" + fileName + ".json", 
                                              FileMode.OpenOrCreate, FileAccess.ReadWrite))
         {
