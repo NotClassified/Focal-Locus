@@ -7,7 +7,7 @@ public class TaskListDataManager : MonoBehaviour
 {
     TaskListManager listManager;
 
-    public TaskListCollection currentData = new TaskListCollection();
+    public TaskListCollection currentData;
     [SerializeField] string fileName;
 
     private void Awake()
@@ -18,17 +18,18 @@ public class TaskListDataManager : MonoBehaviour
     {
         LoadData();
         Debug.Log("File Location: " + Application.persistentDataPath);
+        print(currentData.lists[0].rootTasks[0] is TaskParentData);
+        print((currentData.lists[0].rootTasks[0] as TaskParentData).children);
     }
 
     public void SaveData()
     {
         DeleteData(); //for overwriting
 
-        if (currentData == null)
-        {
+        if (currentData.lists.Count == 0)
             currentData = new TaskListCollection();
-        }
 
+        print(currentData.lists[0].rootTasks[0] is TaskParentData);
         string json = JsonUtility.ToJson(currentData, true);
         Debug.Log("Serialized data: \n" + json);
         using (FileStream stream = File.Open(Application.persistentDataPath + "/" + fileName + ".json", 
@@ -48,7 +49,7 @@ public class TaskListDataManager : MonoBehaviour
     {
         if (!DataExists())
         {
-            Debug.LogWarning("No data");
+            SaveData();
             return;
         }
 
@@ -91,11 +92,11 @@ public class TaskListDataManager : MonoBehaviour
             collection.lists.Add(new TaskListData());
         }
 
-        collection.lists[dayIndex].allTasks.Clear();
+        collection.lists[dayIndex].rootTasks.Clear();
         //copy "listData" to the "dayIndex" list
-        foreach (TaskObjectData task in listData.allTasks)
+        foreach (TaskObjectData task in listData.rootTasks)
         {
-            collection.lists[dayIndex].allTasks.Add(new TaskObjectData(task));
+            collection.lists[dayIndex].rootTasks.Add(new TaskObjectData(task));
         }
 
         return collection;
@@ -111,51 +112,111 @@ public class TaskListDataManager : MonoBehaviour
 
         //delete all tasks in this layer
         TaskListData list = currentData.lists[currentData.todayIndex];
-        for (int i = 0; i < list.allTasks.Count; i++)
+        for (int i = 0; i < list.rootTasks.Count; i++)
         {
-            if (TaskListManager.IsInsideLayer(list.allTasks[i].layerID, layerID))
-            {
-                list.allTasks.Remove(list.allTasks[i]);
-                i--;
-            }
+            //if (TaskListManager.IsInsideLayer(list.rootTasks[i].layerID, layerID))
+            //{
+            //    list.rootTasks.Remove(list.rootTasks[i]);
+            //    i--;
+            //}
         }
         //paste in tasks for this layer
-        foreach (TaskObjectData task in layerData.allTasks)
+        foreach (TaskObjectData task in layerData.rootTasks)
         {
-            list.allTasks.Add(task);
+            list.rootTasks.Add(task);
         }
         SaveData();
+    }
+    public void AddRootLayerTask(TaskObjectData task)
+    {
+        currentData.lists[currentData.todayIndex].rootTasks.Add(task);
+    }
+    public TaskParentData ChangeTaskToParent(TaskObjectData task)
+    {
+        TaskParentData newParent = new TaskParentData(task);
+
+        var taskParent = FindParent(task);
+        int newTaskIndex = FindTaskIndex(task, taskParent);
+        if (taskParent == null) //new parent is on root layer
+        {
+            currentData.lists[currentData.todayIndex].rootTasks[newTaskIndex] = newParent;
+        }
+        else
+        {
+            taskParent.children[newTaskIndex] = newParent;
+        }
+        return newParent;
     }
     public void RemoveTask(string taskID)
     {
         //SortListFromTopLayerToBottomLayer(currentData.lists[currentData.todayIndex]);
 
         TaskListData list = currentData.lists[currentData.todayIndex];
-        for (int i = 0; i < list.allTasks.Count; i++)
+        for (int i = 0; i < list.rootTasks.Count; i++)
         {
-            if (list.allTasks[i].layerID.Equals(taskID))
+            //if (list.rootTasks[i].layerID.Equals(taskID))
+            //{
+            //    list.rootTasks.Remove(list.rootTasks[i]);
+            //    break;
+            //}
+        }
+    }
+
+    public TaskParentData FindParent(TaskObjectData task)
+    {
+        foreach (TaskObjectData rootTask in currentData.lists[currentData.todayIndex].rootTasks)
+        {
+            if (rootTask is TaskParentData)
             {
-                list.allTasks.Remove(list.allTasks[i]);
-                break;
+                TaskParentData parent = (TaskParentData)rootTask;
+                foreach (TaskObjectData child in parent.children)
+                {
+                    if (child == task)
+                    {
+                        return parent;
+                    }
+                }
             }
         }
+        return null;
+    }
+    int FindTaskIndex(TaskObjectData task, TaskParentData parent)
+    {
+        if (parent == null)
+        {
+            var list = currentData.lists[currentData.todayIndex];
+            for (int i = 0; i < list.rootTasks.Count; i++)
+            {
+                if (list.rootTasks[i] == task)
+                    return i;
+            }
+        }
+        else
+        {
+            for (int i = 0; i < parent.children.Count; i++)
+            {
+                if (parent.children[i] == task)
+                    return i;
+            }
+        }
+        return -1;
     }
 
     void SortListFromTopLayerToBottomLayer(TaskListData list)
     {
         List<TaskObjectData> newOrder = new List<TaskObjectData>();
         int layer = 1; //top layer
-        while (newOrder.Count < list.allTasks.Count)
+        while (newOrder.Count < list.rootTasks.Count)
         {
-            foreach (TaskObjectData task in list.allTasks)
-            {
-                if (task.layerID.Length == layer)
-                    newOrder.Add(task);
-            }
+            //foreach (TaskObjectData task in list.rootTasks)
+            //{
+            //    if (task.layerID.Length == layer)
+            //        newOrder.Add(task);
+            //}
             layer++;
         }
 
-        list.allTasks = newOrder;
+        list.rootTasks = newOrder;
     }
 
     public void ChangeDay(int newDay, int oldDay)
@@ -171,7 +232,7 @@ public class TaskListDataManager : MonoBehaviour
         if (currentData.lists.Count <= newDay) 
         {
             currentData = SaveListToCollection(currentData, currentData.lists[oldDay], newDay);
-            foreach (TaskObjectData task in currentData.lists[newDay].allTasks)
+            foreach (TaskObjectData task in currentData.lists[newDay].rootTasks)
             {
                 task.completed = false;
             }

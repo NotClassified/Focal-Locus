@@ -45,7 +45,7 @@ public class TaskActions : MonoBehaviour
 
     public void ButtonLayerAction()
     {
-        manager.ChangeLayer(taskData.layerID);
+        manager.ChangeLayer(taskData);
     }
 
     public void ButtonToggleTaskStatus()

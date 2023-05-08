@@ -1,9 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 [System.Serializable]
 public class TaskListData
 {
-    public List<TaskObjectData> allTasks = new List<TaskObjectData>();
+    public List<TaskObjectData> rootTasks = new List<TaskObjectData>();
 }
