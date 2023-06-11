@@ -21,11 +21,12 @@ public class TaskActions : MonoBehaviour
 
     private void OnEnable()
     {
-        TaskListManager.ListChanged += UpdateTask;
+        TaskListManager.ListChanged += delegate { UpdateTask(); } ;
     }
     private void OnDisable()
     {
-        TaskListManager.ListChanged -= UpdateTask;
+        TaskListManager.ListChanged -= delegate { UpdateTask(); };
+
     }
 
     public void UpdateTask()

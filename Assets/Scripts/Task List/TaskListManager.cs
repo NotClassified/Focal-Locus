@@ -13,7 +13,8 @@ public class TaskListManager : ScreenState
 {
     TaskListDataManager dataManager;
 
-    public static event System.Action ListChanged;
+    ///<summary> (bool onlyDisplayChange) </summary>
+    public static event System.Action<bool> ListChanged;
 
     [SerializeField] Transform listParent;
     [SerializeField] GameObject taskPrefab;
@@ -88,26 +89,11 @@ public class TaskListManager : ScreenState
     }
     public void ConfrimNewTask(string newTaskName)
     {
-        TaskObjectData newTask;
-        if (activeParent == null) //root layer
-        {
-            newTask = new TaskObjectData(newTaskName, false, true);
-            dataManager.AddRootLayerTask(newTask);
-        }
-        else
-        {
-            newTask = new TaskObjectData(newTaskName, false, false);
-            if (activeParent is TaskParentData == false) //new parent
-            {
-                activeParent = dataManager.ChangeTaskToParent(activeParent);
-            }
+        TaskObjectData newTask = new TaskObjectData(newTaskName, false, activeParent);
+        dataManager.AddRootLayerTask(newTask);
 
-            (activeParent as TaskParentData).children.Add(newTask);
-        }
-        //print(dataManager.currentData.lists[0].rootTasks[0] is TaskParentData);
         AddTask(newTask);
-        dataManager.SaveData();
-        ListChanged();
+        ListChanged(false);
     }
 
     public void CompleteTask(TaskObjectData taskData)
@@ -148,7 +134,7 @@ public class TaskListManager : ScreenState
             }
             task.SetSiblingIndex(index - 1);
         }
-        dataManager.SaveData();
+        ListChanged(false);
     }
     //TaskActions FindTaskActionScript(TaskObjectData task)
     //{
@@ -212,32 +198,20 @@ public class TaskListManager : ScreenState
         {
             AddTask(task);
         }
-        ListChanged();
+        ListChanged(true);
     }
 
     public void ChangeLayer(TaskObjectData newParent)
     {
         ClearActiveTasks();
-        if (newParent == null) //root layer
-        {
-            GoToRootLayer();
-            return;
-        }
-        else if (newParent is TaskParentData)
-        {
-            TaskParentData downCast = (TaskParentData)newParent;
-            foreach (TaskObjectData task in downCast.children)
-            {
-                AddTask(task);
-            }
-        }
+        //add siblings
         activeParent = newParent;
 
-        ListChanged();
+        ListChanged(true);
     }
     public void Button_LeaveActiveLayer()
     {
-        ChangeLayer(dataManager.FindParent(activeParent));
+        ChangeLayer(activeParent.parent);
     }
 
     void ClearActiveTasks()
@@ -261,7 +235,7 @@ public class TaskListManager : ScreenState
         }
         //dataManager.OverwriteListLayer(activeLayer, activeLayerID);
 
-        ListChanged();
+        ListChanged(false);
     }
     public void StartDelayUpdateRoutine(int frames) => StartCoroutine(DelayUpdate(frames));
     IEnumerator DelayUpdate(int frames)

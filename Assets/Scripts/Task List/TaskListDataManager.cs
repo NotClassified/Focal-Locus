@@ -13,13 +13,26 @@ public class TaskListDataManager : MonoBehaviour
     private void Awake()
     {
         listManager = GetComponent<TaskListManager>();
+        TaskListManager.ListChanged += TaskListChanged;
+    }
+    private void OnDestroy()
+    {
+        TaskListManager.ListChanged -= TaskListChanged;
+
     }
     private void Start()
     {
         LoadData();
         Debug.Log("File Location: " + Application.persistentDataPath);
-        print(currentData.lists[0].rootTasks[0] is TaskParentData);
-        print((currentData.lists[0].rootTasks[0] as TaskParentData).children);
+    }
+
+    void TaskListChanged(bool onlyDisplayChange)
+    {
+        if (onlyDisplayChange)
+        {
+            return;
+        }
+        SaveData();
     }
 
     public void SaveData()
@@ -29,7 +42,6 @@ public class TaskListDataManager : MonoBehaviour
         if (currentData.lists.Count == 0)
             currentData = new TaskListCollection();
 
-        print(currentData.lists[0].rootTasks[0] is TaskParentData);
         string json = JsonUtility.ToJson(currentData, true);
         Debug.Log("Serialized data: \n" + json);
         using (FileStream stream = File.Open(Application.persistentDataPath + "/" + fileName + ".json", 
@@ -131,22 +143,6 @@ public class TaskListDataManager : MonoBehaviour
     {
         currentData.lists[currentData.todayIndex].rootTasks.Add(task);
     }
-    public TaskParentData ChangeTaskToParent(TaskObjectData task)
-    {
-        TaskParentData newParent = new TaskParentData(task);
-
-        var taskParent = FindParent(task);
-        int newTaskIndex = FindTaskIndex(task, taskParent);
-        if (taskParent == null) //new parent is on root layer
-        {
-            currentData.lists[currentData.todayIndex].rootTasks[newTaskIndex] = newParent;
-        }
-        else
-        {
-            taskParent.children[newTaskIndex] = newParent;
-        }
-        return newParent;
-    }
     public void RemoveTask(string taskID)
     {
         //SortListFromTopLayerToBottomLayer(currentData.lists[currentData.todayIndex]);
@@ -160,46 +156,6 @@ public class TaskListDataManager : MonoBehaviour
             //    break;
             //}
         }
-    }
-
-    public TaskParentData FindParent(TaskObjectData task)
-    {
-        foreach (TaskObjectData rootTask in currentData.lists[currentData.todayIndex].rootTasks)
-        {
-            if (rootTask is TaskParentData)
-            {
-                TaskParentData parent = (TaskParentData)rootTask;
-                foreach (TaskObjectData child in parent.children)
-                {
-                    if (child == task)
-                    {
-                        return parent;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-    int FindTaskIndex(TaskObjectData task, TaskParentData parent)
-    {
-        if (parent == null)
-        {
-            var list = currentData.lists[currentData.todayIndex];
-            for (int i = 0; i < list.rootTasks.Count; i++)
-            {
-                if (list.rootTasks[i] == task)
-                    return i;
-            }
-        }
-        else
-        {
-            for (int i = 0; i < parent.children.Count; i++)
-            {
-                if (parent.children[i] == task)
-                    return i;
-            }
-        }
-        return -1;
     }
 
     void SortListFromTopLayerToBottomLayer(TaskListData list)
