@@ -40,6 +40,16 @@ public class TaskListManager : ScreenState
 
     [SerializeField] Button addGroup_Button;
 
+
+    [ContextMenu("Printables")]
+    void Printables()
+    {
+        if (activeParent is null)
+            print(null);
+        else
+            print(activeParent.name);
+    }
+
     public void ResetTasks()
     {
         foreach (TaskActions task in listParent.GetComponentsInChildren<TaskActions>())
@@ -87,13 +97,62 @@ public class TaskListManager : ScreenState
         TaskActions task = Instantiate(taskPrefab, listParent).GetComponent<TaskActions>();
         task.taskData = _taskData;
     }
+    void AddTaskAndSiblings(TaskObjectData _taskData)
+    {
+        AddTask(_taskData);
+
+        if (_taskData.nextSibling != null)
+        {
+            AddTaskAndSiblings(_taskData.nextSibling);
+        }
+    }
+    ///<summary> adds root tasks </summary>
+    void AddTaskAndSiblings() => AddTaskAndSiblings(dataManager.currentData.lists[DayIndex].rootTasks[0]);
+    TaskObjectData GetFirstSibling()
+    {
+        TaskActions firstTaskAction = listParent.GetComponentInChildren<TaskActions>();
+        if (firstTaskAction is not null)
+            return firstTaskAction.taskData;
+        else
+            return null;
+    }
+    TaskObjectData GetLastSibling()
+    {
+        if (activeParent is null || activeParent.child is null) //find first sibling
+        {
+            TaskObjectData firstSibling = GetFirstSibling();
+            if (firstSibling is not null)
+                return GetLastSibling(firstSibling);
+            else
+                return null; //no tasks in this layer
+        }
+
+        return GetLastSibling(activeParent.child);
+    }
+    TaskObjectData GetLastSibling(TaskObjectData sibling)
+    {
+        if (sibling.nextSibling is null)
+            return sibling;
+        else
+            return sibling.nextSibling;
+    }
+
     public void ConfrimNewTask(string newTaskName)
     {
-        TaskObjectData newTask = new TaskObjectData(newTaskName, false, activeParent);
-        dataManager.AddRootLayerTask(newTask);
+        TaskObjectData lastSibling = GetLastSibling();
+
+        TaskObjectData newTask = new TaskObjectData(newTaskName, activeParent, lastSibling);
+        if (lastSibling is not null)
+            lastSibling.nextSibling = newTask;
+
+        if (activeParent is null)
+            dataManager.AddRootLayerTask(newTask);
+        else if (lastSibling is null)
+            activeParent.child = newTask; //"newTask" is the first task in this layer
 
         AddTask(newTask);
-        ListChanged(false);
+        if (ListChanged != null)
+            ListChanged(false); 
     }
 
     public void CompleteTask(TaskObjectData taskData)
@@ -134,7 +193,8 @@ public class TaskListManager : ScreenState
             }
             task.SetSiblingIndex(index - 1);
         }
-        ListChanged(false);
+        if (ListChanged != null)
+            ListChanged(false);
     }
     //TaskActions FindTaskActionScript(TaskObjectData task)
     //{
@@ -198,20 +258,31 @@ public class TaskListManager : ScreenState
         {
             AddTask(task);
         }
-        ListChanged(true);
+        if (ListChanged != null)
+            ListChanged(true);
     }
 
     public void ChangeLayer(TaskObjectData newParent)
     {
         ClearActiveTasks();
-        //add siblings
+
+        if (newParent is null)
+        {
+            AddTaskAndSiblings(); //add root tasks
+        }
+        else if (newParent.child is not null)
+            AddTaskAndSiblings(newParent.child); //add all children tasks
         activeParent = newParent;
 
-        ListChanged(true);
+        if (ListChanged != null)
+            ListChanged(true);
     }
     public void Button_LeaveActiveLayer()
     {
-        ChangeLayer(activeParent.parent);
+        if (activeParent is not null)
+        {
+            ChangeLayer(activeParent.parent);
+        }
     }
 
     void ClearActiveTasks()
@@ -226,16 +297,17 @@ public class TaskListManager : ScreenState
     void UpdateData()
     {
         //gather all data from today's list and save it
-        TaskListData activeLayer = new TaskListData();
+        TaskListData rootLayer = new TaskListData();
 
         TaskActions[] taskActionScripts = listParent.GetComponentsInChildren<TaskActions>();
         foreach (TaskActions actionScript in taskActionScripts)
         {
-            activeLayer.rootTasks.Add(actionScript.taskData);
+            rootLayer.rootTasks.Add(actionScript.taskData);
         }
-        //dataManager.OverwriteListLayer(activeLayer, activeLayerID);
+        dataManager.currentData.lists[DayIndex] = rootLayer;
 
-        ListChanged(false);
+        if (ListChanged != null)
+            ListChanged(false);
     }
     public void StartDelayUpdateRoutine(int frames) => StartCoroutine(DelayUpdate(frames));
     IEnumerator DelayUpdate(int frames)

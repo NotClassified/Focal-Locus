@@ -29,9 +29,7 @@ public class TaskListDataManager : MonoBehaviour
     void TaskListChanged(bool onlyDisplayChange)
     {
         if (onlyDisplayChange)
-        {
             return;
-        }
         SaveData();
     }
 
@@ -43,6 +41,7 @@ public class TaskListDataManager : MonoBehaviour
             currentData = new TaskListCollection();
 
         string json = JsonUtility.ToJson(currentData, true);
+        //print(currentData.lists[currentData.todayIndex].rootTasks[0].nextSibling.name);
         Debug.Log("Serialized data: \n" + json);
         using (FileStream stream = File.Open(Application.persistentDataPath + "/" + fileName + ".json", 
                                              FileMode.OpenOrCreate, FileAccess.ReadWrite))

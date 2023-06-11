@@ -16,9 +16,11 @@ public class ProgressManager : MonoBehaviour
         progressBar = transform.Find("Progress Bar").GetComponent<Slider>();
         progressText = progressBar.transform.Find("Text").GetComponent<TextMeshProUGUI>();
 
-        TaskListManager.ListChanged += delegate { UpdateProgress(); };
+        TaskListManager.ListChanged += ListChanged;
     }
-    private void OnDestroy() => TaskListManager.ListChanged -= delegate { UpdateProgress(); };
+    private void OnDestroy() => TaskListManager.ListChanged -= ListChanged;
+
+    void ListChanged(bool onlyDisplayChange) => UpdateProgress();
 
     public void UpdateProgress()
     {

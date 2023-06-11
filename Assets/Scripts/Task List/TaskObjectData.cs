@@ -6,6 +6,7 @@ public class TaskObjectData
 {
     public string name;
     public bool completed;
+    public TaskListData children = new TaskListData();
 
     public TaskObjectData parent;
     public TaskObjectData child;
@@ -25,21 +26,10 @@ public class TaskObjectData
         }
     }
 
-    public TaskObjectData(string name, bool completed, TaskObjectData parent)
+    public TaskObjectData(string name, TaskObjectData parent, TaskObjectData prevSibling)
     {
         this.name = name;
-        this.completed = completed;
         this.parent = parent;
-    }
-
-    public TaskObjectData(string name, bool completed, TaskObjectData parent, TaskObjectData child) : this(name, completed, parent)
-    {
-        this.child = child;
-    }
-
-    public TaskObjectData(string name, bool completed, TaskObjectData parent, TaskObjectData child, TaskObjectData nextSibling, TaskObjectData prevSibling) : this(name, completed, parent, child)
-    {
-        this.nextSibling = nextSibling;
         this.prevSibling = prevSibling;
     }
 }
