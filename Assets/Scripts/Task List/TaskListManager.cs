@@ -9,7 +9,7 @@ public enum DaysOfWeek
     Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 }
 
-public class TaskListManager : ScreenState
+public class TaskListManager : MonoBehaviour
 {
     TaskListDataManager dataManager;
     ProgressManager progressManager;
@@ -102,9 +102,8 @@ public class TaskListManager : ScreenState
         }
     }
 
-    public override void OnEnter()
+    public void OnEnable()
     {
-        base.OnEnter();
         ShowList();
     }
 
@@ -244,11 +243,21 @@ public class TaskListManager : ScreenState
     }
     public void MoveUpTask(Transform task)
     {
-        int index = task.GetSiblingIndex();
-        if (index > 0)
+        int newIndex = task.GetSiblingIndex();
+
+        while (newIndex > 0 && task.parent.GetChild(newIndex - 1).gameObject.activeSelf is false)
         {
-            task.SetSiblingIndex(index - 1);
+            newIndex--;
         }
+        if ((task.parent == listParent && newIndex > 0) || (task.parent == groupListParent && newIndex > 1))
+        {
+            newIndex--;
+        }
+        else
+            return;
+
+        task.SetSiblingIndex(newIndex);
+
         UpdateData();
     }
 
@@ -319,7 +328,6 @@ public class TaskListManager : ScreenState
             return;
 
         RemoveAllTasks();
-        print(listParent.childCount);
         //show the task list from "collection" on "dayIndex"
         var taskList = collection.lists[collection.dayIndex].tasks;
         for (int i = 0; i < taskList.Count; i++)

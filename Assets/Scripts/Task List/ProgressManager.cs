@@ -20,6 +20,9 @@ public class ProgressManager : MonoBehaviour
 
     public void UpdateProgress()
     {
+        if (progressBar is null)
+            return;
+
         int total = 0;
         int completed = 0;
 
