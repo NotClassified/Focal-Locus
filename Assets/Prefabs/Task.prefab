@@ -282,7 +282,6 @@ GameObject:
   - component: {fileID: 5587835419860696536}
   - component: {fileID: 7471280003602477079}
   - component: {fileID: 4249280349808433612}
-  - component: {fileID: 8385656900043191505}
   m_Layer: 5
   m_Name: Move Up
   m_TagString: Untagged
@@ -393,7 +392,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8786238394157873467}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: TaskObject, Assembly-CSharp
         m_MethodName: ButtonMoveUp
         m_Mode: 1
@@ -405,18 +404,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &8385656900043191505
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2480514992255798352}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5147d2af9cb966d44b3c8b0c9083b82e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &4795739109913100026
 GameObject:
   m_ObjectHideFlags: 0
@@ -564,7 +551,6 @@ GameObject:
   - component: {fileID: 4201401938892213620}
   - component: {fileID: 3085562858689794413}
   - component: {fileID: 2691283561979580561}
-  - component: {fileID: 5166942381559978074}
   m_Layer: 5
   m_Name: Delete
   m_TagString: Untagged
@@ -675,7 +661,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8786238394157873467}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: TaskObject, Assembly-CSharp
         m_MethodName: ButtonRemove
         m_Mode: 1
@@ -687,18 +673,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &5166942381559978074
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4927152820280512206}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5147d2af9cb966d44b3c8b0c9083b82e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &6955510431726153703
 GameObject:
   m_ObjectHideFlags: 0
@@ -821,7 +795,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8786238394157873467}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: TaskObject, Assembly-CSharp
         m_MethodName: ButtonToggleTaskStatus
         m_Mode: 1
@@ -842,7 +816,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 315304416798734259}
-  - component: {fileID: 8786238394157873467}
+  - component: {fileID: 8641382560946641968}
   m_Layer: 5
   m_Name: Task
   m_TagString: Untagged
@@ -868,12 +842,12 @@ RectTransform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 420, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &8786238394157873467
+--- !u!114 &8641382560946641968
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -882,6 +856,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 7924161485148026866}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5147d2af9cb966d44b3c8b0c9083b82e, type: 3}
+  m_Script: {fileID: 11500000, guid: e2e2708da22efa14fb08fcc2b77a56a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

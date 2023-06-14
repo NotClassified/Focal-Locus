@@ -39,14 +39,14 @@ public class TaskListManager : MonoBehaviour
 
     public void ResetTasks()
     {
-        foreach(Transform child in listParent)
-        {
-            TaskObject task = child.GetComponent<TaskObject>();
-            if (task.completed)
-            {
-                ToggleTaskComplete(task);
-            }
-        }
+        //foreach(Transform child in listParent)
+        //{
+        //    TaskObject task = child.GetComponent<TaskObject>();
+        //    if (task.completed)
+        //    {
+        //        ToggleTaskComplete(task);
+        //    }
+        //}
 
 
     }
@@ -97,49 +97,49 @@ public class TaskListManager : MonoBehaviour
     }
 
 
-    void AddTask(string taskName)
-    {
-        GameObject taskObject = Instantiate(taskPrefab, listParent);
-        taskObject.GetComponent<TaskObject>().TaskName = taskName;
-    }
-    void AddTask(TaskObjectData taskData)
-    {
-        TaskObject taskscript;
-    }
-    public void ConfrimNewTask(string newTaskName)
-    {
-        AddTask(newTaskName);
+    //void AddTask(string taskName)
+    //{
+    //    GameObject taskObject = Instantiate(taskPrefab, listParent);
+    //    taskObject.GetComponent<TaskObject>().TaskName = taskName;
+    //////}
+    //void AddTask(TaskObjectData taskData)
+    //{
+    //    TaskObject taskscript;
+    ////}
+    //public void ConfrimNewTask(string newTaskName)
+    //{
+    //    AddTask(newTaskName);
 
-        UpdateData();
-    }
+    //    UpdateData();
+    //}
 
-    public void RemoveTask(TaskObject task)
-    {
+    //public void RemoveTask(TaskObject task)
+    //{
 
 
-        Destroy(task.gameObject);
-        StartDelayUpdateRoutine(2);
-        progressManager.UpdateProgress();
-    }
+    //    Destroy(task.gameObject);
+    //    StartDelayUpdateRoutine(2);
+    //    progressManager.UpdateProgress();
+    //}
 
-    public void ToggleTaskComplete(TaskObject task)
-    {
-        task.completed = !task.completed;
-        //darken task when completed
-        Image button = task.transform.GetChild(0).GetComponent<Image>();
-        var alpha = button.color;
-        alpha.a = task.completed ? .5f : 1f;
-        button.color = alpha;
+    //public void ToggleTaskComplete(TaskUI task)
+    //{
+    //    task.completed = !task.completed;
+    //    //darken task when completed
+    //    Image button = task.transform.GetChild(0).GetComponent<Image>();
+    //    var alpha = button.color;
+    //    alpha.a = task.completed ? .5f : 1f;
+    //    button.color = alpha;
 
-        //slash text when completed
-        TextMeshProUGUI taskText = task.transform.GetChild(0).GetComponentInChildren<TextMeshProUGUI>();
-        if (task.completed)
-            taskText.fontStyle = FontStyles.Strikethrough;
-        else
-            taskText.fontStyle = FontStyles.Bold;
+    //    //slash text when completed
+    //    TextMeshProUGUI taskText = task.transform.GetChild(0).GetComponentInChildren<TextMeshProUGUI>();
+    //    if (task.completed)
+    //        taskText.fontStyle = FontStyles.Strikethrough;
+    //    else
+    //        taskText.fontStyle = FontStyles.Bold;
 
-        progressManager.UpdateProgress();
-    }
+    //    progressManager.UpdateProgress();
+    //}
     public void MoveUpTask(Transform task)
     {
         int newIndex = task.GetSiblingIndex();
@@ -198,7 +198,7 @@ public class TaskListManager : MonoBehaviour
         var taskList = collection.lists[collection.dayIndex].tasks;
         for (int i = 0; i < taskList.Count; i++)
         {
-            AddTask(taskList[i]);
+            //AddTask(taskList[i]);
         }
         firstDay = collection.firstDay;
         DayIndex = collection.dayIndex;

@@ -68,9 +68,9 @@ public class PromptManager : MonoBehaviour
             case Prompt.Confirm:
                 switch (activePrompt)
                 {
-                    case Prompt.AddTask:
-                        taskManager.ConfrimNewTask(inputFieldValue);
-                        break;
+                    //case Prompt.AddTask:
+                    //    taskManager.ConfrimNewTask(inputFieldValue);
+                    //    break;
                     case Prompt.FormatData:
                         dataTaskManager.FormatData();
                         break;

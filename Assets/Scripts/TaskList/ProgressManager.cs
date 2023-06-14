@@ -26,32 +26,32 @@ public class ProgressManager : MonoBehaviour
         int total = 0;
         int completed = 0;
 
-        if (groupListParent.parent.gameObject.activeSelf)
-        {
-            foreach (Transform task in groupListParent)
-            {
-                TaskObject taskScript = task.GetComponent<TaskObject>();
-                if (taskScript != null && task.gameObject.activeSelf)
-                {
-                    total++;
-                    if (task.GetComponent<TaskObject>().completed)
-                        completed++;
-                }
-            }
-        }
-        else
-        {
-            foreach (Transform task in listParent)
-            {
-                TaskObject taskScript = task.GetComponent<TaskObject>();
-                if (taskScript != null)
-                {
-                    total++;
-                    if (task.GetComponent<TaskObject>().completed)
-                        completed++;
-                }
-            }
-        }
+        //if (groupListParent.parent.gameObject.activeSelf)
+        //{
+        //    foreach (Transform task in groupListParent)
+        //    {
+        //        TaskObject taskScript = task.GetComponent<TaskObject>();
+        //        if (taskScript != null && task.gameObject.activeSelf)
+        //        {
+        //            total++;
+        //            if (task.GetComponent<TaskObject>().completed)
+        //                completed++;
+        //        }
+        //    }
+        //}
+        //else
+        //{
+        //    foreach (Transform task in listParent)
+        //    {
+        //        TaskObject taskScript = task.GetComponent<TaskObject>();
+        //        if (taskScript != null)
+        //        {
+        //            total++;
+        //            if (task.GetComponent<TaskObject>().completed)
+        //                completed++;
+        //        }
+        //    }
+        //}
         if (total > 0)
         {
             progressBar.maxValue = total;

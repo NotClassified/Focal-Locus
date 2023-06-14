@@ -5,6 +5,6 @@ using UnityEngine;
 [System.Serializable]
 public class TaskListData
 {
-    public List<TaskObjectData> tasks = new List<TaskObjectData>();
+    public List<TaskData> tasks = new List<TaskData>();
     public List<string> groups = new List<string>();
 }

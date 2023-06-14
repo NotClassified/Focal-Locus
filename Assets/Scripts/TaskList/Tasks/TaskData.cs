@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
-public class TaskObjectData
+public class TaskData
 {
     public string name;
     public bool completed;
@@ -14,14 +14,14 @@ public class TaskObjectData
     public int nextSibling_ID;
     public int prevSibling_ID;
 
-    public TaskObjectData(string name, int id, int parent_ID)
+    public TaskData(string name, int id, int parent_ID)
     {
         this.name = name;
         this.id = id;
         this.parent_ID = parent_ID;
     }
 
-    public TaskObjectData(TaskObjectData clone)
+    public TaskData(TaskData clone)
     {
         this.name = clone.name;
         this.completed = clone.completed;
