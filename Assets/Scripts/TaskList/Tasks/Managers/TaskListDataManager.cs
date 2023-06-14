@@ -14,12 +14,9 @@ public class TaskListDataManager : MonoBehaviour
         Debug.Log("File Location: " + Application.persistentDataPath);
     }
 
-    public void SaveData(TaskListData listData, int dayIndex, DaysOfWeek firstDay)
+    public void SaveData()
     {
         DeleteData(); //for overwriting
-
-        currentData = SaveListToCollection(currentData, listData, dayIndex);
-        currentData.firstDay = firstDay;
 
         string json = JsonUtility.ToJson(currentData, true);
         Debug.Log("Serialized data: \n" + json);
@@ -62,7 +59,7 @@ public class TaskListDataManager : MonoBehaviour
     {
         DeleteData();
         currentData = new TaskListCollection();
-        SaveData(new TaskListData(), 0, 0);
+        SaveData();
         GetComponent<TaskListManager>().LoadCollection(currentData);
     }
     void DeleteData()
@@ -74,6 +71,28 @@ public class TaskListDataManager : MonoBehaviour
     }
 
     bool DataExists() => File.Exists(Application.persistentDataPath + "/" + fileName + ".json");
+
+    public void AddTask(TaskData newTask)
+    {
+        currentData.lists[currentData.dayIndex].tasks.Add(newTask);
+        SaveData();
+    }
+    public void RemoveTask(TaskData task)
+    {
+        currentData.lists[currentData.dayIndex].tasks.Remove(task);
+        SaveData();
+    }
+    public TaskData FindTask(int searchID)
+    {
+        foreach (TaskData task in currentData.lists[currentData.dayIndex].tasks)
+        {
+            if (task.id == searchID)
+            {
+                return task;
+            }
+        }
+        return new TaskData(null, 0, 0);
+    }
 
     TaskListCollection SaveListToCollection(TaskListCollection collection, TaskListData listData, int dayIndex)
     {

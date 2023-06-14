@@ -7,7 +7,7 @@ using TMPro;
 [System.Serializable]
 public enum Prompt
 {
-    Cancel, Confirm, AddTask, AddGroup, ChangeFirstDay, FormatData, GoToToday
+    Cancel, Confirm, AddTask, AddChild, ChangeFirstDay, FormatData, GoToToday
 }
 
 public class PromptManager : MonoBehaviour
@@ -60,17 +60,28 @@ public class PromptManager : MonoBehaviour
 
     public void PromptAction(PromptComponent component)
     {
-        switch (component.prompt)
+        PromptAction(component.prompt);
+    }
+    public void PromptAction(Prompt prompt)
+    {
+        switch (prompt)
         {
             case Prompt.Cancel:
+                if (activePrompt is Prompt.AddChild)
+                {
+                    taskManager.DeconfirmChildTask();
+                }
                 promptParent.SetActive(false);
                 break;
             case Prompt.Confirm:
                 switch (activePrompt)
                 {
-                    //case Prompt.AddTask:
-                    //    taskManager.ConfrimNewTask(inputFieldValue);
-                    //    break;
+                    case Prompt.AddTask:
+                        taskManager.ConfrimNewTask(inputFieldValue);
+                        break;
+                    case Prompt.AddChild:
+                        taskManager.ConfrimChildTask(inputFieldValue);
+                        break;
                     case Prompt.FormatData:
                         dataTaskManager.FormatData();
                         break;
@@ -82,11 +93,11 @@ public class PromptManager : MonoBehaviour
                 promptParent.SetActive(false);
                 break;
             default: //Open Prompt
-                activePrompt = component.prompt;
+                activePrompt = prompt;
 
-                AssignInputFieldPlaceHolder(component.prompt);
-                AssignQuestion(component.prompt);
-                AssignDropDown(component.prompt);
+                AssignInputFieldPlaceHolder(prompt);
+                AssignQuestion(prompt);
+                AssignDropDown(prompt);
 
                 promptParent.SetActive(true);
                 break;
@@ -101,12 +112,12 @@ public class PromptManager : MonoBehaviour
             case Prompt.AddTask:
                 placeHolder = "Task Name...";
                 break;
-            case Prompt.AddGroup:
-                placeHolder = "Group Name...";
+            case Prompt.AddChild:
+                placeHolder = "Child Task Name...";
                 break;
             default:
                 inputField.gameObject.SetActive(false);
-                return;
+                return; //This UI not needed
         }
         inputField.text = "";
         inputField.placeholder.GetComponent<TextMeshProUGUI>().text = placeHolder;
@@ -126,7 +137,7 @@ public class PromptManager : MonoBehaviour
                 break;
             default:
                 question_Text.gameObject.SetActive(false);
-                return;
+                return; //This UI not needed
         }
         question_Text.text = question;
         question_Text.gameObject.SetActive(true);
@@ -148,7 +159,7 @@ public class PromptManager : MonoBehaviour
                 break;
             default:
                 dropDown.gameObject.SetActive(false);
-                return;
+                return; //This UI not needed
         }
 
         dropDown.ClearOptions();

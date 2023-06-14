@@ -6,5 +6,4 @@ using UnityEngine;
 public class TaskListData
 {
     public List<TaskData> tasks = new List<TaskData>();
-    public List<string> groups = new List<string>();
 }
