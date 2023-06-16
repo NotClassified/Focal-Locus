@@ -6,6 +6,8 @@ using TMPro;
 
 public class ProgressManager : MonoBehaviour
 {
+    TaskListDataManager dataManager;
+
     [SerializeField] Transform listParent;
     [SerializeField] Transform groupListParent;
 
@@ -14,8 +16,16 @@ public class ProgressManager : MonoBehaviour
 
     private void Awake()
     {
+        dataManager = GetComponent<TaskListDataManager>();
+
         progressBar = transform.Find("Progress Bar").GetComponent<Slider>();
         progressText = progressBar.transform.Find("Text").GetComponent<TextMeshProUGUI>();
+        TaskListManager.ListChange += UpdateProgress;
+    }
+    private void OnDestroy()
+    {
+        TaskListManager.ListChange -= UpdateProgress;
+
     }
 
     public void UpdateProgress()
@@ -26,17 +36,26 @@ public class ProgressManager : MonoBehaviour
         int total = 0;
         int completed = 0;
 
-        foreach (Transform task in listParent)
-        {
-            TaskUI taskScript = task.GetComponent<TaskUI>();
-            if (taskScript != null)
-            {
-                total++;
-                if (taskScript.Data.completed)
-                    completed++;
-            }
-        }
+        ////tasks that are showing now
+        //foreach (Transform task in listParent)
+        //{
+        //    TaskUI taskScript = task.GetComponent<TaskUI>();
+        //    if (taskScript != null)
+        //    {
+        //        total++;
+        //        if (taskScript.Data.completed)
+        //            completed++;
+        //    }
+        //}
 
+        //all tasks in today's list
+        List<TaskData> allTasks = dataManager.currentData.lists[dataManager.currentData.dayIndex].tasks;
+        total = allTasks.Count;
+        foreach (TaskData task in allTasks)
+        {
+            if (task.completed)
+                completed++;
+        }
 
         if (total > 0)
         {

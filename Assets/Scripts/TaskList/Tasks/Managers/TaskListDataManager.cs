@@ -10,7 +10,7 @@ public class TaskListDataManager : MonoBehaviour
 
     private void Start()
     {
-        LoadData();
+        ReadData();
         Debug.Log("File Location: " + Application.persistentDataPath);
     }
 
@@ -33,7 +33,7 @@ public class TaskListDataManager : MonoBehaviour
         }
     }
 
-    public void LoadData()
+    public void ReadData()
     {
         if (!DataExists())
         {
@@ -49,18 +49,23 @@ public class TaskListDataManager : MonoBehaviour
                 string json = reader.ReadToEnd();
                 Debug.Log("Previously Saved Data: \n" + json);
                 currentData = JsonUtility.FromJson<TaskListCollection>(json);
-
-                GetComponent<TaskListManager>().LoadCollection(currentData);
+                LoadData();
             }
         }
+    }
+    void LoadData()
+    {
+        GetComponent<TaskListManager>().LoadCollection(currentData);
+        TaskIDManager.SetNewestID(currentData.newestTaskID);
     }
 
     public void FormatData()
     {
         DeleteData();
+
         currentData = new TaskListCollection();
         SaveData();
-        GetComponent<TaskListManager>().LoadCollection(currentData);
+        LoadData();
     }
     void DeleteData()
     {
@@ -75,6 +80,7 @@ public class TaskListDataManager : MonoBehaviour
     public void AddTask(TaskData newTask)
     {
         currentData.lists[currentData.dayIndex].tasks.Add(newTask);
+        currentData.newestTaskID = newTask.id;
         SaveData();
     }
     public void RemoveTask(TaskData task)
@@ -91,7 +97,8 @@ public class TaskListDataManager : MonoBehaviour
                 return task;
             }
         }
-        return new TaskData(null, 0, 0);
+        Debug.LogError("couldn't find task");
+        return null;
     }
 
     TaskListCollection SaveListToCollection(TaskListCollection collection, TaskListData listData, int dayIndex)

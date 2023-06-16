@@ -9,15 +9,11 @@ public enum DaysOfWeek
     Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 }
 
-public enum SiblingTask
-{
-    Both, Next, Previous
-}
-
 public class TaskListManager : MonoBehaviour
 {
+    public static event System.Action ListChange;
+
     TaskListDataManager dataManager;
-    ProgressManager progressManager;
 
     [SerializeField] Transform listParent;
     [SerializeField] GameObject taskPrefab;
@@ -57,9 +53,6 @@ public class TaskListManager : MonoBehaviour
         if (DayIndex + dayIncrement >= 0)
         {
             dataManager.ChangeDay(DayIndex + dayIncrement, DayIndex);
-
-            ShowList();
-            StartDelayUpdateRoutine(2);
         }
     }
     public void SetToday()
@@ -84,18 +77,6 @@ public class TaskListManager : MonoBehaviour
             if (dataManager == null)
                 Debug.LogError("No data manager detected");
         }
-        if (progressManager == null)
-        {
-            progressManager = GetComponent<ProgressManager>();
-
-            if (progressManager == null)
-                Debug.LogError("No data manager detected");
-        }
-    }
-
-    public void OnEnable()
-    {
-        ShowList();
     }
 
     public void TaskMainAction(TaskUI taskUI)
@@ -107,22 +88,23 @@ public class TaskListManager : MonoBehaviour
         else //this task has children
         {
             RemoveAllTasks();
-            AddSiblingTasks(dataManager.FindTask(taskUI.Data.child_ID), SiblingTask.Both);
-            activeParent = taskUI.Data;
+            AddTaskAndNextSiblings(FindFirstSibling(taskUI.Data.child_ID));
+            ChangeParent(taskUI.Data);
         }
     }
     public void TaskAddChild(TaskUI taskUI)
     {
-        activeParent = taskUI.Data;
+        ChangeParent(taskUI.Data);
         GetComponent<PromptManager>().PromptAction(Prompt.AddChild);
     }
 
-    void AddTask(TaskData taskData)
+    void AddTask(TaskData taskData) => AddTask(taskData, false);
+    void AddTask(TaskData taskData, bool newTask)
     {
         GameObject taskObject = Instantiate(taskPrefab, listParent);
         taskObject.GetComponent<TaskUI>().Data = taskData;
 
-        if (listParent.childCount > 1) //exchange sibling IDs
+        if (newTask && listParent.childCount > 1) //exchange sibling IDs
         {
             TaskData prevSibling = listParent.GetChild(listParent.childCount - 2).GetComponent<TaskUI>().Data;
             prevSibling.nextSibling_ID = taskData.id;
@@ -132,10 +114,10 @@ public class TaskListManager : MonoBehaviour
     public TaskData ConfrimNewTask(string newTaskName)
     {
         TaskData newTask = new TaskData(newTaskName, TaskIDManager.getNewID, activeParent is null ? 0 : activeParent.id);
-        AddTask(newTask);
+        AddTask(newTask, true);
 
         dataManager.AddTask(newTask);
-        progressManager.UpdateProgress();
+        ListChange();
 
         return newTask;
     }
@@ -144,13 +126,14 @@ public class TaskListManager : MonoBehaviour
         RemoveAllTasks();
         //create child task
         TaskData newTask = new TaskData(newTaskName, TaskIDManager.getNewID, activeParent.id);
-        Instantiate(taskPrefab, listParent).GetComponent<TaskUI>().Data = newTask;
+        AddTask(newTask);
 
         activeParent.child_ID = newTask.id; //give parent the child's ID
         GetUIComponent(activeParent.id).UpdateUI(TaskUI.DataProperties.ParentStatus);
 
         dataManager.AddTask(newTask);
-        progressManager.UpdateProgress();
+        ListChange();
+
     }
     public void DeconfirmChildTask() => ChangeParent(activeParent.parent_ID);
 
@@ -165,14 +148,13 @@ public class TaskListManager : MonoBehaviour
         }
         return null;
     }
+    void ChangeParent(TaskData parent) => activeParent = parent;
     void ChangeParent(int parentID)
     {
         if (parentID == 0)
-        {
-            activeParent = null;
-            return;
-        }
-        activeParent = dataManager.FindTask(parentID);
+            ChangeParent(null); //no parent, these are root tasks
+        else
+            ChangeParent(dataManager.FindTask(parentID));
     }
 
     public void RemoveTask(TaskUI task)
@@ -180,7 +162,8 @@ public class TaskListManager : MonoBehaviour
         dataManager.RemoveTask(task.Data);
         Destroy(task.gameObject);
 
-        progressManager.UpdateProgress();
+        ListChange();
+
     }
 
     public void ToggleTaskComplete(TaskUI task)
@@ -189,7 +172,8 @@ public class TaskListManager : MonoBehaviour
         task.UpdateUI(TaskUI.DataProperties.CompleteStatus);
 
         dataManager.SaveData();
-        progressManager.UpdateProgress();
+        ListChange();
+
     }
     public void MoveUpTask(Transform task)
     {
@@ -211,34 +195,23 @@ public class TaskListManager : MonoBehaviour
         UpdateData();
     }
 
-    void AddSiblingTasks(TaskData sibling, SiblingTask direction)
+    void AddTaskAndNextSiblings(TaskData task)
     {
-        switch (direction)
+        AddTask(task);
+        if (task.nextSibling_ID != 0) //does this task have a next sibling?
         {
-            case SiblingTask.Both: //add this sibling, next sibling, and previous sibling
-                AddTask(sibling); 
-                AddSiblingTasks(sibling, SiblingTask.Next);
-                AddSiblingTasks(sibling, SiblingTask.Previous);
-                break;
-
-            case SiblingTask.Next:
-                if (sibling.nextSibling_ID != 0)
-                {
-                    TaskData nextSibling = dataManager.FindTask(sibling.nextSibling_ID);
-                    AddTask(nextSibling);
-                    AddSiblingTasks(nextSibling, SiblingTask.Next);
-                }
-                break;
-
-            case SiblingTask.Previous:
-                if (sibling.prevSibling_ID != 0)
-                {
-                    TaskData prevSibling = dataManager.FindTask(sibling.prevSibling_ID);
-                    AddTask(prevSibling);
-                    AddSiblingTasks(prevSibling, SiblingTask.Previous);
-                }
-                break;
+            TaskData nextSibling = dataManager.FindTask(task.nextSibling_ID);
+            AddTaskAndNextSiblings(nextSibling);
         }
+    }
+    TaskData FindFirstSibling(int siblingID) => FindFirstSibling(dataManager.FindTask(siblingID));
+    TaskData FindFirstSibling(TaskData sibling)
+    {
+        if (sibling.prevSibling_ID != 0) //is there a sibling before?
+            return FindFirstSibling(dataManager.FindTask(sibling.prevSibling_ID));
+
+        else //this is the first sibling
+            return sibling;
     }
 
     ///<summary> will not save </summary>
@@ -253,8 +226,8 @@ public class TaskListManager : MonoBehaviour
 
     void UpdateData()
     {
+        ListChange();
 
-        progressManager.UpdateProgress();
     }
     public void StartDelayUpdateRoutine(int frames) => StartCoroutine(DelayUpdate(frames));
     IEnumerator DelayUpdate(int frames)
@@ -282,19 +255,16 @@ public class TaskListManager : MonoBehaviour
         firstDay = collection.firstDay;
         DayIndex = collection.dayIndex;
         SetToday();
-        progressManager.UpdateProgress();
+        ListChange();
+
     }
 
-    public void ShowList()
-    {
-        progressManager.UpdateProgress();
-    }
     public void ShowParentSiblings()
     {
         if (activeParent is null)
             return;
         RemoveAllTasks();
-        AddSiblingTasks(activeParent, SiblingTask.Both);
+        AddTaskAndNextSiblings(FindFirstSibling(activeParent));
         ChangeParent(activeParent.parent_ID);
     }
     bool IsTaskShown(int taskId)
