@@ -37,7 +37,7 @@ public class TaskUI : MonoBehaviour
     public void AddChild() => Manager.TaskAddChild(this);
     public void Remove() => Manager.RemoveTask(this);
 
-    public void MoveUp() => Manager.MoveUpTask(transform);
+    //public void MoveUp() => Manager.MoveUpTask(transform);
 
     public enum DataProperties
     {

@@ -50,7 +50,7 @@ public class PromptManager : MonoBehaviour
                     dayIndex += TaskListManager.amountOfDaysInAWeek;
                 }
                 taskManager.firstDay = (DaysOfWeek) dayIndex;
-                taskManager.StartDelayUpdateRoutine(2);
+                //taskManager.StartDelayUpdateRoutine(2);
                 break;
             default:
                 Debug.LogError("This prompt doesn't have dropdown options: " + option);

@@ -69,13 +69,7 @@ public class TaskListManager : MonoBehaviour
 
     private void Awake()
     {
-        if (dataManager == null)
-        {
-            dataManager = GetComponent<TaskListDataManager>();
-
-            if (dataManager == null)
-                Debug.LogError("No data manager detected");
-        }
+        dataManager = GetComponent<TaskListDataManager>();
     }
 
     public void TaskMainAction(TaskUI taskUI)
@@ -193,35 +187,6 @@ public class TaskListManager : MonoBehaviour
             print(allChildrenCompleted);
         }
     }
-    void SetParentCompleteStatus(TaskData child)
-    {
-        Debug.LogError("not implemented");
-    }
-    void SetParentCompleteStatus(int childID)
-    {
-        Debug.LogError("not implemented");
-
-    }
-
-    public void MoveUpTask(Transform task)
-    {
-        int newIndex = task.GetSiblingIndex();
-
-        while (newIndex > 0 && task.parent.GetChild(newIndex - 1).gameObject.activeSelf is false)
-        {
-            newIndex--;
-        }
-        //if ((task.parent == listParent && newIndex > 0) || (task.parent == groupListParent && newIndex > 1))
-        //{
-        //    newIndex--;
-        //}
-        //else
-        //    return;
-
-        task.SetSiblingIndex(newIndex);
-
-        UpdateData();
-    }
 
     void AddTaskAndNextSiblings(TaskData task)
     {
@@ -242,7 +207,7 @@ public class TaskListManager : MonoBehaviour
             return sibling;
     }
 
-    ///<summary> will not save </summary>
+
     void RemoveAllTasks()
     {
         foreach(Transform task in listParent)
@@ -250,21 +215,6 @@ public class TaskListManager : MonoBehaviour
             task.gameObject.SetActive(false);
             Destroy(task.gameObject);
         }
-    }
-
-    void UpdateData()
-    {
-        ListChange();
-
-    }
-    public void StartDelayUpdateRoutine(int frames) => StartCoroutine(DelayUpdate(frames));
-    IEnumerator DelayUpdate(int frames)
-    {
-        for (int i = 0; i < frames; i++)
-        {
-            yield return new WaitForEndOfFrame();
-        }
-        UpdateData();
     }
 
     public void LoadCollection(TaskListCollection collection)
