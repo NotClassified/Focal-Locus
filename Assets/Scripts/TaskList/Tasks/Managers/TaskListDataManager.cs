@@ -13,19 +13,35 @@ public class TaskListDataManager : MonoBehaviour
         ReadData();
         Debug.Log("File Location: " + Application.persistentDataPath);
     }
+    private void Update()
+    {
+        if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            ConvertDataToJson(true);
+        }
+        if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.Alpha2))
+        { 
+            using (FileStream stream = File.Open(Application.persistentDataPath + "/" + fileName + ".json",
+                                                 FileMode.Open, FileAccess.ReadWrite))
+            {
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    ConvertFileToJson(reader, true);
+                }
+            }
+        }
+    }
 
     public void SaveData()
     {
         DeleteData(); //for overwriting
 
-        string json = JsonUtility.ToJson(currentData, true);
-        Debug.Log("Serialized data: \n" + json);
         using (FileStream stream = File.Open(Application.persistentDataPath + "/" + fileName + ".json", 
                                              FileMode.OpenOrCreate, FileAccess.ReadWrite))
         {
             using (StreamWriter writer = new StreamWriter(stream))
             {
-                writer.Write(json);
+                writer.Write(ConvertDataToJson(false));
                 writer.Flush(); // applies the changes to the file
 
                 //Debug.Log(Application.persistentDataPath + "/" + fileName + ".json");
@@ -46,9 +62,7 @@ public class TaskListDataManager : MonoBehaviour
         {
             using (StreamReader reader = new StreamReader(stream))
             {
-                string json = reader.ReadToEnd();
-                Debug.Log("Previously Saved Data: \n" + json);
-                currentData = JsonUtility.FromJson<TaskListCollection>(json);
+                currentData = JsonUtility.FromJson<TaskListCollection>(ConvertFileToJson(reader, false));
                 LoadData();
             }
         }
@@ -57,6 +71,22 @@ public class TaskListDataManager : MonoBehaviour
     {
         GetComponent<TaskListManager>().LoadCollection(currentData);
         TaskIDManager.SetNewestID(currentData.newestTaskID);
+    }
+    string ConvertDataToJson(bool print)
+    {
+        string json = JsonUtility.ToJson(currentData, true);
+        if (print)
+            Debug.Log("Serialized data: \n" + json);
+
+        return json;
+    }
+    string ConvertFileToJson(StreamReader reader, bool print)
+    {
+        string json = reader.ReadToEnd();
+        if (print)
+            Debug.Log("Previously Saved Data: \n" + json);
+
+        return json;
     }
 
     public void FormatData()

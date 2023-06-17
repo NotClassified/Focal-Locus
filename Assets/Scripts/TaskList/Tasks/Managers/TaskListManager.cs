@@ -112,7 +112,13 @@ public class TaskListManager : MonoBehaviour
     }
     public TaskData ConfrimNewTask(string newTaskName)
     {
-        TaskData newTask = new TaskData(newTaskName, TaskIDManager.getNewID, activeParent is null ? 0 : activeParent.id);
+        int taskID = TaskIDManager.getNewID;
+        if (newTaskName.Equals("/id"))
+        {
+            newTaskName = taskID.ToString();
+        }
+
+        TaskData newTask = new TaskData(newTaskName, taskID, activeParent is null ? 0 : activeParent.id);
         AddNewSiblingTask(newTask);
         ListChange();
 
@@ -120,15 +126,25 @@ public class TaskListManager : MonoBehaviour
     }
     public void ConfrimChildTask(string newTaskName)
     {
+        int taskID = TaskIDManager.getNewID;
+        if (newTaskName.Equals("/id"))
+        {
+            newTaskName = taskID.ToString();
+        }
+
         RemoveAllTasks();
-        TaskData newChildTask = new TaskData(newTaskName, TaskIDManager.getNewID, activeParent.id);
+        TaskData newChildTask = new TaskData(newTaskName, taskID, activeParent.id);
 
         activeParent.child_ID = newChildTask.id; //give parent the child's ID
-        activeParent.completed = false; //due to new child task, the parent won't be completed
+        //due to new child task, the parents won't be completed
+        if (activeParent.completed)
+        {
+            activeParent.completed = false;
+            SetParentCompleteStatus(activeParent);
+        }
 
         AddTask(newChildTask, true);
         ListChange();
-
     }
     public void DeconfirmChildTask() => ChangeParent(activeParent.parent_ID);
 
@@ -172,22 +188,56 @@ public class TaskListManager : MonoBehaviour
     }
     void SetParentCompleteStatus()
     {
-        if (activeParent is not null)
+        if (activeParent is null)
+            return;
+
+        bool allChildrenCompleted = true;
+        foreach (TaskUI task in listParent.GetComponentsInChildren<TaskUI>())
         {
-            bool allChildrenCompleted = true;
-            foreach (TaskUI task in listParent.GetComponentsInChildren<TaskUI>())
+            if (!task.Data.completed)
             {
-                if (!task.Data.completed)
-                {
-                    allChildrenCompleted = false;
-                    break;
-                }
+                allChildrenCompleted = false;
+                break;
             }
+        }
+        if (activeParent.completed != allChildrenCompleted)
+        {
             activeParent.completed = allChildrenCompleted;
-            print(allChildrenCompleted);
+            //make sure all parents of these tasks have the correct complete status
+            SetParentCompleteStatus(activeParent);
+
+            dataManager.SaveData();
+        }
+    }
+    void SetParentCompleteStatus(TaskData child)
+    {
+        if (child.parent_ID == 0)
+            return; //no parent
+
+        bool allChildrenCompleted = IsTaskAndNextSiblingsComplete(FindFirstSibling(child));
+
+        TaskData parent = dataManager.FindTask(child.parent_ID);
+        if (parent.completed != allChildrenCompleted)
+        {
+            print("Parent Complete Status Change");
+            parent.completed = allChildrenCompleted;
+            //make sure all parents of these tasks have the correct complete status
+            SetParentCompleteStatus(parent);
         }
     }
 
+    bool IsTaskAndNextSiblingsComplete(TaskData sibling)
+    {
+        if (sibling.completed)
+        {
+            if (sibling.nextSibling_ID != 0) //is there a next sibling?
+                return IsTaskAndNextSiblingsComplete(dataManager.FindTask(sibling.nextSibling_ID));
+            else
+                return true;
+        }
+        else
+            return false;
+    }
     void AddTaskAndNextSiblings(TaskData task)
     {
         AddTask(task, false);
