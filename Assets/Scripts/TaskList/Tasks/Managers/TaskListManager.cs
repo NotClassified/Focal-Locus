@@ -37,16 +37,6 @@ public class TaskListManager : MonoBehaviour
     }
 
 
-    public void ResetTasks()
-    {
-        foreach (TaskUI task in listParent.GetComponentsInChildren<TaskUI>())
-        {
-            if (task.Data.completed)
-            {
-                ToggleTaskComplete(task);
-            }
-        }
-    }
     public void ButtonChangeDay(int dayIncrement)
     {
         if (DayIndex + dayIncrement >= 0)
@@ -148,17 +138,6 @@ public class TaskListManager : MonoBehaviour
     }
     public void DeconfirmChildTask() => ChangeParent(activeParent.parent_ID);
 
-    TaskUI GetUIComponent(int searchID)
-    {
-        foreach (TaskUI task in listParent.GetComponentsInChildren<TaskUI>())
-        {
-            if (task.Data.id == searchID)
-            {
-                return task;
-            }
-        }
-        return null;
-    }
     void ChangeParent(TaskData parent) => activeParent = parent;
     void ChangeParent(int parentID)
     {
@@ -219,7 +198,6 @@ public class TaskListManager : MonoBehaviour
         TaskData parent = dataManager.FindTask(child.parent_ID);
         if (parent.completed != allChildrenCompleted)
         {
-            print("Parent Complete Status Change");
             parent.completed = allChildrenCompleted;
             //make sure all parents of these tasks have the correct complete status
             SetParentCompleteStatus(parent);
@@ -273,13 +251,14 @@ public class TaskListManager : MonoBehaviour
             return;
 
         RemoveAllTasks();
-        //show the task list from "collection" on "dayIndex"
+        //show root tasks from "collection" on "dayIndex"
         var taskList = collection.lists[collection.dayIndex].tasks;
         for (int i = 0; i < taskList.Count; i++)
         {
             if (taskList[i].parent_ID == 0)
                 AddTask(taskList[i], false);
         }
+        activeParent = null;
         firstDay = collection.firstDay;
         DayIndex = collection.dayIndex;
         SetToday();
@@ -294,17 +273,5 @@ public class TaskListManager : MonoBehaviour
         RemoveAllTasks();
         AddTaskAndNextSiblings(FindFirstSibling(activeParent));
         ChangeParent(activeParent.parent_ID);
-    }
-    bool IsTaskShown(int taskId)
-    {
-
-        foreach (TaskUI task in listParent.GetComponentsInChildren<TaskUI>())
-        {
-            if (task.Data.id == taskId)
-            {
-                return true;
-            }
-        }
-        return false;
     }
 }

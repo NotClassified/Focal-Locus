@@ -135,7 +135,9 @@ public class TaskListDataManager : MonoBehaviour
     {
         if (dayIndex < collection.lists.Count) //this day has a list, overwrite the list with "listData"
         {
-            collection.lists[dayIndex] = listData;
+            collection.lists[dayIndex] = new TaskListData(listData.tasks);
+            print(listData.tasks[0].GetHashCode());
+            print(collection.lists[dayIndex].tasks[0].GetHashCode());
             return collection;
         }
         else //this day has NO list, make an empty list:
@@ -150,18 +152,17 @@ public class TaskListDataManager : MonoBehaviour
         if (currentData.lists.Count <= oldDay)
             return;
 
-        bool newDayCreated = false;
-
         //copy list from "oldDay" to "newDay" if "newDay" doesn't have a list
         if (currentData.lists.Count <= newDay) 
         {
             currentData = SaveListToCollection(currentData, currentData.lists[oldDay], newDay);
-            newDayCreated = true;
+            //uncomplete all tasks on the new day
+            foreach (TaskData task in currentData.lists[newDay].tasks)
+                task.completed = false;
         }
         currentData.dayIndex = newDay;
+
         GetComponent<TaskListManager>().LoadCollection(currentData);
 
-        if (newDayCreated)
-            GetComponent<TaskListManager>().ResetTasks();
     }
 }

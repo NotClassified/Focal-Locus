@@ -6,4 +6,13 @@ using UnityEngine;
 public class TaskListData
 {
     public List<TaskData> tasks = new List<TaskData>();
+
+    public TaskListData() { }
+    public TaskListData(List<TaskData> cloneTasks)
+    {
+        foreach (TaskData task in cloneTasks)
+        {
+            this.tasks.Add(new TaskData(task));
+        }
+    }
 }
