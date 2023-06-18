@@ -48,13 +48,16 @@ public class ProgressManager : MonoBehaviour
         //    }
         //}
 
-        //all tasks in today's list
+        //all tasks in today's list except parent tasks
         List<TaskData> allTasks = dataManager.currentData.lists[dataManager.currentData.dayIndex].tasks;
-        total = allTasks.Count;
         foreach (TaskData task in allTasks)
         {
-            if (task.completed)
-                completed++;
+            if (task.child_ID == 0) //not a parent task
+            {
+                total++;
+                if (task.completed)
+                    completed++;
+            }
         }
 
         if (total > 0)

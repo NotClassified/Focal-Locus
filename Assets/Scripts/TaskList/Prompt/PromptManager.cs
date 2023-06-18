@@ -122,7 +122,9 @@ public class PromptManager : MonoBehaviour
         inputField.text = "";
         inputField.placeholder.GetComponent<TextMeshProUGUI>().text = placeHolder;
         inputField.gameObject.SetActive(true);
+        Invoke("FocusOnInputField", .1f);
     }
+    void FocusOnInputField() => inputField.Select();
 
     void AssignQuestion(Prompt prompt)
     {
