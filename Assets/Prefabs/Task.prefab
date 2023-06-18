@@ -549,6 +549,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4208578600707278706}
   - component: {fileID: 4201401938892213620}
+  - component: {fileID: 5777069324261503595}
   - component: {fileID: 3085562858689794413}
   - component: {fileID: 2691283561979580561}
   m_Layer: 5
@@ -587,6 +588,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4927152820280512206}
   m_CullTransparentMesh: 1
+--- !u!114 &5777069324261503595
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4927152820280512206}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4115f1cb7f5416e4e9572409a98c6d31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  prompt: 7
 --- !u!114 &3085562858689794413
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -660,19 +674,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3085562858689794413}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 8641382560946641968}
-        m_TargetAssemblyTypeName: TaskUI, Assembly-CSharp
-        m_MethodName: Remove
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &6274826754967283963
 GameObject:
   m_ObjectHideFlags: 0

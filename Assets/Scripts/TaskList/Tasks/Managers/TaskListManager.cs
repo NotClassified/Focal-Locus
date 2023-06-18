@@ -153,7 +153,6 @@ public class TaskListManager : MonoBehaviour
         Destroy(task.gameObject);
 
         ListChange();
-
     }
 
     public void ToggleTaskComplete(TaskUI task)

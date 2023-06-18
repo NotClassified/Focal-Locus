@@ -7,7 +7,11 @@ using TMPro;
 [System.Serializable]
 public enum Prompt
 {
-    Cancel, Confirm, AddTask, AddChild, ChangeFirstDay, FormatData, GoToToday
+    Cancel, Confirm, AddTask, AddChild, ChangeFirstDay, DeleteAction, GoToToday, DeleteTask
+}
+public enum DeleteActionOptions
+{
+    DeleteToday, FormatData
 }
 
 public class PromptManager : MonoBehaviour
@@ -17,6 +21,7 @@ public class PromptManager : MonoBehaviour
 
     [SerializeField] GameObject promptParent;
     Prompt activePrompt;
+    object activeExtraData;
 
     TMP_InputField inputField;
     string inputFieldValue;
@@ -39,7 +44,7 @@ public class PromptManager : MonoBehaviour
     public void PromptInputField(string input) => inputFieldValue = input;
     public void PromptDropDown(int option)
     {
-        option--; //skip the blank option
+        option--; //skip the blank/title option
 
         switch (activePrompt)
         {
@@ -49,17 +54,38 @@ public class PromptManager : MonoBehaviour
                 {
                     dayIndex += TaskListManager.amountOfDaysInAWeek;
                 }
-                taskManager.firstDay = (DaysOfWeek) dayIndex;
-                //taskManager.StartDelayUpdateRoutine(2);
+                dataTaskManager.currentData.firstDay = (DaysOfWeek) dayIndex;
+                dataTaskManager.SaveData();
+                taskManager.SetToday();
+                break;
+            case Prompt.DeleteAction:
+                DeleteActionOptions deleteOption = (DeleteActionOptions)option;
+                switch (deleteOption)
+                {
+                    case DeleteActionOptions.DeleteToday:
+                        dataTaskManager.DeleteToday();
+                        break;
+                    case DeleteActionOptions.FormatData:
+                        dataTaskManager.FormatData();
+                        break;
+                    default:
+                        Debug.LogError("This delete option hasn't been implemented: " + deleteOption);
+                        break;
+                }
                 break;
             default:
-                Debug.LogError("This prompt doesn't have dropdown options: " + option);
+                Debug.LogError("This prompt doesn't have dropdown options: " + activePrompt);
                 break;
         }
+        promptParent.SetActive(false);
+
     }
 
-    public void PromptAction(PromptComponent component)
+    public void PromptAction(PromptComponent component, object extraData)
     {
+        if (extraData is not null)
+            activeExtraData = extraData;
+
         PromptAction(component.prompt);
     }
     public void PromptAction(Prompt prompt)
@@ -82,11 +108,14 @@ public class PromptManager : MonoBehaviour
                     case Prompt.AddChild:
                         taskManager.ConfrimChildTask(inputFieldValue);
                         break;
-                    case Prompt.FormatData:
+                    case Prompt.DeleteAction:
                         dataTaskManager.FormatData();
                         break;
                     case Prompt.GoToToday:
                         dataTaskManager.ChangeDay(dataTaskManager.currentData.lists.Count - 1, 0);
+                        break;
+                    case Prompt.DeleteTask:
+                        taskManager.RemoveTask((TaskUI) activeExtraData);
                         break;
                 }
                 taskManager.SetToday();
@@ -131,11 +160,14 @@ public class PromptManager : MonoBehaviour
         string question;
         switch (prompt)
         {
-            case Prompt.FormatData:
+            case Prompt.DeleteAction:
                 question = "Are you sure you want to Format Data?";
                 break;
             case Prompt.GoToToday:
                 question = "Go to Today's List?";
+                break;
+            case Prompt.DeleteTask:
+                question = "Delete Task?";
                 break;
             default:
                 question_Text.gameObject.SetActive(false);
@@ -148,15 +180,24 @@ public class PromptManager : MonoBehaviour
     void AssignDropDown(Prompt prompt)
     {
         List<string> options = new List<string>();
-        options.Add("");
+        options.Add(""); //non-option
 
         switch (prompt)
         {
             case Prompt.ChangeFirstDay:
+                options[0] = "Change First Day";
                 for (int i = 0; i < System.Enum.GetValues(typeof(DaysOfWeek)).Length; i++)
                 {
-                    DaysOfWeek day = (DaysOfWeek) i;
+                    DaysOfWeek day = (DaysOfWeek)i;
                     options.Add(day.ToString());
+                }
+                break;
+            case Prompt.DeleteAction:
+                options[0] = "Choose Delete Action";
+                for (int i = 0; i < System.Enum.GetValues(typeof(DeleteActionOptions)).Length; i++)
+                {
+                    DeleteActionOptions deleteOption = (DeleteActionOptions)i;
+                    options.Add(deleteOption.ToString());
                 }
                 break;
             default:

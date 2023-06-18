@@ -5,9 +5,15 @@ using System.IO;
 
 public class TaskListDataManager : MonoBehaviour
 {
+    TaskListManager listManager;
+
     public TaskListCollection currentData = new TaskListCollection();
     [SerializeField] string fileName;
 
+    private void Awake()
+    {
+        listManager = GetComponent<TaskListManager>();
+    }
     private void Start()
     {
         ReadData();
@@ -69,7 +75,7 @@ public class TaskListDataManager : MonoBehaviour
     }
     void LoadData()
     {
-        GetComponent<TaskListManager>().LoadCollection(currentData);
+        listManager.LoadCollection(currentData);
         TaskIDManager.SetNewestID(currentData.newestTaskID);
     }
     string ConvertDataToJson(bool print)
@@ -136,8 +142,6 @@ public class TaskListDataManager : MonoBehaviour
         if (dayIndex < collection.lists.Count) //this day has a list, overwrite the list with "listData"
         {
             collection.lists[dayIndex] = new TaskListData(listData.tasks);
-            print(listData.tasks[0].GetHashCode());
-            print(collection.lists[dayIndex].tasks[0].GetHashCode());
             return collection;
         }
         else //this day has NO list, make an empty list:
@@ -162,7 +166,17 @@ public class TaskListDataManager : MonoBehaviour
         }
         currentData.dayIndex = newDay;
 
-        GetComponent<TaskListManager>().LoadCollection(currentData);
+        listManager.LoadCollection(currentData);
 
+    }
+    public void DeleteToday()
+    {
+        int todayIndex = currentData.lists.Count - 1;
+        currentData.lists.RemoveAt(todayIndex);
+
+        //load the new today
+        todayIndex = currentData.lists.Count - 1;
+        currentData.dayIndex = todayIndex;
+        listManager.LoadCollection(currentData);
     }
 }

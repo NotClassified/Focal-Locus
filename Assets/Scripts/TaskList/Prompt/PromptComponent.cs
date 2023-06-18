@@ -6,13 +6,20 @@ using UnityEngine.UI;
 public class PromptComponent : MonoBehaviour
 {
     public Prompt prompt;
+    public object extraData;
 
     private void Awake()
     {
+        switch (prompt)
+        {
+            case Prompt.DeleteTask:
+                extraData = GetComponentInParent<TaskUI>();
+                break;
+        }
 
         GetComponent<Button>().onClick.AddListener(
             delegate { 
-                FindObjectOfType<PromptManager>().PromptAction(this); 
+                FindObjectOfType<PromptManager>().PromptAction(this, extraData); 
             }) ;
     }
 }
