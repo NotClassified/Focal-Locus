@@ -17,6 +17,8 @@ public class TaskListManager : MonoBehaviour
 
     [SerializeField] Transform listParent;
     [SerializeField] GameObject taskPrefab;
+    [SerializeField] GameObject movingTaskPrefab;
+    [SerializeField] Transform mainCanvas;
     TaskData activeParent;
 
     public DaysOfWeek firstDay;
@@ -223,6 +225,18 @@ public class TaskListManager : MonoBehaviour
             TaskData nextSibling = dataManager.FindTask(task.nextSibling_ID);
             AddTaskAndNextSiblings(nextSibling);
         }
+    }
+
+    public IEnumerator MoveTask(TaskUI taskUI)
+    {
+        GameObject movingTask = Instantiate(movingTaskPrefab, mainCanvas);
+        movingTask.GetComponent<MovingTask>().name_Text.text = taskUI.Data.name;
+        while (!Input.GetMouseButtonDown(0))
+        {
+            movingTask.GetComponent<RectTransform>().position = Input.mousePosition;
+            yield return null;
+        }
+        Destroy(movingTask);
     }
     TaskData FindFirstSibling(int siblingID) => FindFirstSibling(dataManager.FindTask(siblingID));
     TaskData FindFirstSibling(TaskData sibling)
