@@ -169,8 +169,16 @@ public class TaskListDataManager : MonoBehaviour
         listManager.LoadCollection(currentData);
 
     }
+    public void ChangeFirstDay(DaysOfWeek firstDay)
+    {
+        currentData.firstDay = firstDay;
+        listManager.LoadCollection(currentData);
+    }
     public void DeleteToday()
     {
+        if (currentData.lists.Count <= 1)
+            return;
+
         int todayIndex = currentData.lists.Count - 1;
         currentData.lists.RemoveAt(todayIndex);
 

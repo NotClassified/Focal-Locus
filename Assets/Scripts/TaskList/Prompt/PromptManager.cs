@@ -54,9 +54,7 @@ public class PromptManager : MonoBehaviour
                 {
                     dayIndex += TaskListManager.amountOfDaysInAWeek;
                 }
-                dataTaskManager.currentData.firstDay = (DaysOfWeek) dayIndex;
-                dataTaskManager.SaveData();
-                taskManager.SetToday();
+                dataTaskManager.ChangeFirstDay((DaysOfWeek)dayIndex);
                 break;
             case Prompt.DeleteAction:
                 DeleteActionOptions deleteOption = (DeleteActionOptions)option;
@@ -118,7 +116,6 @@ public class PromptManager : MonoBehaviour
                         taskManager.RemoveTask((TaskUI) activeExtraData);
                         break;
                 }
-                taskManager.SetToday();
                 promptParent.SetActive(false);
                 break;
             default: //Open Prompt
@@ -160,9 +157,6 @@ public class PromptManager : MonoBehaviour
         string question;
         switch (prompt)
         {
-            case Prompt.DeleteAction:
-                question = "Are you sure you want to Format Data?";
-                break;
             case Prompt.GoToToday:
                 question = "Go to Today's List?";
                 break;
@@ -185,7 +179,7 @@ public class PromptManager : MonoBehaviour
         switch (prompt)
         {
             case Prompt.ChangeFirstDay:
-                options[0] = "Change First Day";
+                options[0] = "Change this Day of the Week";
                 for (int i = 0; i < System.Enum.GetValues(typeof(DaysOfWeek)).Length; i++)
                 {
                     DaysOfWeek day = (DaysOfWeek)i;
