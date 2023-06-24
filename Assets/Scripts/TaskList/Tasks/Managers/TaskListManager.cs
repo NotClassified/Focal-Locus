@@ -50,7 +50,8 @@ public class TaskListManager : MonoBehaviour
     {
         //find which day of the week is today
         int todaysIndex = ((int)firstDay + dayIndex) % amountOfDaysInAWeek;
-        dayName_text.text = ((DaysOfWeek)todaysIndex).ToString();
+        if (dayName_text is not null)
+            dayName_text.text = ((DaysOfWeek)todaysIndex).ToString();
 
         //if this is the last day that has a list, the next day button should be a "+" sign
         if (dataManager.currentData.lists.Count <= DayIndex + 1)
@@ -73,7 +74,7 @@ public class TaskListManager : MonoBehaviour
         else //this task has children
         {
             RemoveAllTasks();
-            AddTaskAndNextSiblings(FindFirstSibling(taskUI.Data.child_ID));
+            AddTaskAndNextSiblings(dataManager.FindFirstSibling(taskUI.Data.child_ID));
             ChangeParent(taskUI.Data);
         }
     }
@@ -151,7 +152,7 @@ public class TaskListManager : MonoBehaviour
 
     public void RemoveTask(TaskUI task)
     {
-        dataManager.RemoveTask(task.Data);
+        dataManager.DeleteTask(task.Data);
         Destroy(task.gameObject);
 
         ListChange();
@@ -194,7 +195,7 @@ public class TaskListManager : MonoBehaviour
         if (child.parent_ID == 0)
             return; //no parent
 
-        bool allChildrenCompleted = IsTaskAndNextSiblingsComplete(FindFirstSibling(child));
+        bool allChildrenCompleted = IsTaskAndNextSiblingsComplete(dataManager.FindFirstSibling(child));
 
         TaskData parent = dataManager.FindTask(child.parent_ID);
         if (parent.completed != allChildrenCompleted)
@@ -238,15 +239,6 @@ public class TaskListManager : MonoBehaviour
         }
         Destroy(movingTask);
     }
-    TaskData FindFirstSibling(int siblingID) => FindFirstSibling(dataManager.FindTask(siblingID));
-    TaskData FindFirstSibling(TaskData sibling)
-    {
-        if (sibling.prevSibling_ID != 0) //is there a sibling before?
-            return FindFirstSibling(dataManager.FindTask(sibling.prevSibling_ID));
-
-        else //this is the first sibling
-            return sibling;
-    }
 
 
     void RemoveAllTasks()
@@ -284,7 +276,7 @@ public class TaskListManager : MonoBehaviour
         if (activeParent is null)
             return;
         RemoveAllTasks();
-        AddTaskAndNextSiblings(FindFirstSibling(activeParent));
+        AddTaskAndNextSiblings(dataManager.FindFirstSibling(activeParent));
         ChangeParent(activeParent.parent_ID);
     }
 }

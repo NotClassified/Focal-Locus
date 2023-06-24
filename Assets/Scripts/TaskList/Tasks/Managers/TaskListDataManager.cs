@@ -119,22 +119,108 @@ public class TaskListDataManager : MonoBehaviour
         currentData.newestTaskID = newTask.id;
         SaveData();
     }
-    public void RemoveTask(TaskData task)
+    public void DeleteTask(TaskData task)
     {
+        DeleteChildren(task);
+
+        //change the parent's child reference, if this task is the child reference
+        TaskData parent;
+        if (TryFindTask(task.parent_ID, out parent) && parent.child_ID == task.id)
+        {
+            if (task.prevSibling_ID != 0)
+                parent.child_ID = task.prevSibling_ID;
+            else if (task.nextSibling_ID != 0)
+                parent.child_ID = task.nextSibling_ID;
+            else //there are no siblings, so this parent will no longer be a parent
+                parent.child_ID = 0; 
+        }
+        //remove sibling references
+        TaskData nextSibling;
+        if (TryFindTask(task.nextSibling_ID, out nextSibling))
+            nextSibling.prevSibling_ID = 0;
+        TaskData previousSibling;
+        if (TryFindTask(task.prevSibling_ID, out previousSibling))
+            previousSibling.nextSibling_ID = 0;
+        if (nextSibling is not null && previousSibling is not null)
+        {
+            //exchange IDs to siblings
+            nextSibling.prevSibling_ID = previousSibling.id;
+            previousSibling.nextSibling_ID = nextSibling.id;
+        }
+
         currentData.lists[currentData.dayIndex].tasks.Remove(task);
         SaveData();
     }
+    //void DeleteSiblings(TaskData sibling, bool isFirstSibling)
+    //{
+    //    if (!isFirstSibling)
+    //    {
+    //        DeleteSiblings(FindFirstSibling(sibling), true);
+    //        return;
+    //    }
+
+    //    int nextSiblingID = sibling.nextSibling_ID;
+
+    //    DeleteChildren(sibling);
+    //    print(sibling.id);
+    //    currentData.lists[currentData.dayIndex].tasks.Remove(sibling);
+
+    //    //delete next sibling, if there is a next sibling, otherwise, save data
+    //    if (nextSiblingID != 0)
+    //        DeleteSiblings(FindTask(nextSiblingID), true); //"nextSibling" is now the first sibling
+    //    else
+    //        SaveData();
+    //}
+    void DeleteChildren(TaskData parent)
+    {
+        if (parent.child_ID == 0)
+            return; //"parent" has no children
+
+        List<TaskData> allTasks = currentData.lists[currentData.dayIndex].tasks;
+        for (int i = 0; i < allTasks.Count; i++)
+        {
+            if (allTasks[i].parent_ID == parent.id)
+            {
+                DeleteChildren(allTasks[i]);
+                currentData.lists[currentData.dayIndex].tasks.Remove(allTasks[i--]);
+            }
+        }
+    }
     public TaskData FindTask(int searchID)
     {
+        TaskData foundTask;
+        if (!TryFindTask(searchID, out foundTask))
+            Debug.LogError("couldn't find task with ID: " + searchID);
+
+        return foundTask;
+    }
+    public bool TryFindTask(int searchID, out TaskData foundTask)
+    {
+        if (searchID == 0) //There is no task ID that is 0
+        {
+            foundTask = null;
+            return false;
+        }
+
         foreach (TaskData task in currentData.lists[currentData.dayIndex].tasks)
         {
             if (task.id == searchID)
             {
-                return task;
+                foundTask = task;
+                return true;
             }
         }
-        Debug.LogError("couldn't find task");
-        return null;
+        foundTask = null;
+        return false;
+    }
+    public TaskData FindFirstSibling(int siblingID) => FindFirstSibling(FindTask(siblingID));
+    public TaskData FindFirstSibling(TaskData sibling)
+    {
+        if (sibling.prevSibling_ID != 0) //is there a sibling before?
+            return FindFirstSibling(FindTask(sibling.prevSibling_ID));
+
+        else //this is the first sibling
+            return sibling;
     }
 
     TaskListCollection SaveListToCollection(TaskListCollection collection, TaskListData listData, int dayIndex)
