@@ -151,26 +151,6 @@ public class TaskListDataManager : MonoBehaviour
         currentData.lists[currentData.dayIndex].tasks.Remove(task);
         SaveData();
     }
-    //void DeleteSiblings(TaskData sibling, bool isFirstSibling)
-    //{
-    //    if (!isFirstSibling)
-    //    {
-    //        DeleteSiblings(FindFirstSibling(sibling), true);
-    //        return;
-    //    }
-
-    //    int nextSiblingID = sibling.nextSibling_ID;
-
-    //    DeleteChildren(sibling);
-    //    print(sibling.id);
-    //    currentData.lists[currentData.dayIndex].tasks.Remove(sibling);
-
-    //    //delete next sibling, if there is a next sibling, otherwise, save data
-    //    if (nextSiblingID != 0)
-    //        DeleteSiblings(FindTask(nextSiblingID), true); //"nextSibling" is now the first sibling
-    //    else
-    //        SaveData();
-    //}
     void DeleteChildren(TaskData parent)
     {
         if (parent.child_ID == 0)
