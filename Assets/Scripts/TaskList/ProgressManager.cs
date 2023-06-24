@@ -9,7 +9,6 @@ public class ProgressManager : MonoBehaviour
     TaskListDataManager dataManager;
 
     [SerializeField] Transform listParent;
-    [SerializeField] Transform groupListParent;
 
     Slider progressBar;
     TextMeshProUGUI progressText;
@@ -35,18 +34,6 @@ public class ProgressManager : MonoBehaviour
 
         int total = 0;
         int completed = 0;
-
-        ////tasks that are showing now
-        //foreach (Transform task in listParent)
-        //{
-        //    TaskUI taskScript = task.GetComponent<TaskUI>();
-        //    if (taskScript != null)
-        //    {
-        //        total++;
-        //        if (taskScript.Data.completed)
-        //            completed++;
-        //    }
-        //}
 
         //all tasks in today's list except parent tasks
         List<TaskData> allTasks = dataManager.currentData.lists[dataManager.currentData.dayIndex].tasks;
