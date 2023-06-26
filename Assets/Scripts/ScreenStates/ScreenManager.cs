@@ -7,13 +7,17 @@ public class ScreenManager : MonoBehaviour
 {
     public static ScreenManager instance;
 
-    public List<ScreenState> screens = new List<ScreenState>();
+    List<ScreenState> screens = new List<ScreenState>();
 
     private ScreenState currentState;
 
     private void Awake()
     {
         instance = this;
+        foreach (ScreenState screen in GetComponentsInChildren<ScreenState>(true))
+        {
+            screens.Add(screen);
+        }
 
         foreach (ScreenState screen in screens)
         {
@@ -23,10 +27,10 @@ public class ScreenManager : MonoBehaviour
 
     private void Start()
     {
-        ChangeState(screens[0].GetType());
+        ChangeState<MenuManager>();
 
     }
-
+    public void ChangeState<T>() where T : ScreenState => ChangeState(typeof(T));
     public void ChangeState(Type stateType)
     {
         ScreenState next = FindScreen(stateType);
