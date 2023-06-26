@@ -6,13 +6,21 @@ using TMPro;
 public class MovingTask : MonoBehaviour
 {
     public TextMeshProUGUI name_Text;
-    private TaskUI hoveringTaskUI;
+    public TaskUI hoveringTask;
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.transform.TryGetComponent(out hoveringTaskUI))
+        if (collision.transform.TryGetComponent(out hoveringTask))
         {
-            print(hoveringTaskUI.Data.name);
+            hoveringTask.DarkenColor(true);
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.transform.TryGetComponent(out TaskUI exitTask))
+        {
+            exitTask.DarkenColor(false);
         }
     }
 }

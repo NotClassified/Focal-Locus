@@ -134,22 +134,27 @@ public class TaskListDataManager : MonoBehaviour
             else //there are no siblings, so this parent will no longer be a parent
                 parent.child_ID = 0; 
         }
-        //remove sibling references
+        RemoveAndExchangeSiblingIDs(task);
+
+        currentData.lists[currentData.dayIndex].tasks.Remove(task);
+        SaveData();
+    }
+    public void RemoveAndExchangeSiblingIDs(TaskData task)
+    {
         TaskData nextSibling;
         if (TryFindTask(task.nextSibling_ID, out nextSibling))
             nextSibling.prevSibling_ID = 0;
+
         TaskData previousSibling;
         if (TryFindTask(task.prevSibling_ID, out previousSibling))
             previousSibling.nextSibling_ID = 0;
+
         if (nextSibling is not null && previousSibling is not null)
         {
             //exchange IDs to siblings
             nextSibling.prevSibling_ID = previousSibling.id;
             previousSibling.nextSibling_ID = nextSibling.id;
         }
-
-        currentData.lists[currentData.dayIndex].tasks.Remove(task);
-        SaveData();
     }
     void DeleteChildren(TaskData parent)
     {

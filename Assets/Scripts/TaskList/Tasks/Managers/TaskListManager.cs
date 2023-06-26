@@ -228,16 +228,62 @@ public class TaskListManager : MonoBehaviour
         }
     }
 
-    public IEnumerator MoveTask(TaskUI taskUI)
+    public IEnumerator MoveTask(TaskData activeTask)
     {
         GameObject movingTask = Instantiate(movingTaskPrefab, mainCanvas);
-        movingTask.GetComponent<MovingTask>().name_Text.text = taskUI.Data.name;
-        while (!Input.GetMouseButtonDown(0))
+        MovingTask movingScript = movingTask.GetComponent<MovingTask>();
+        movingScript.name_Text.text = activeTask.name;
+
+        while (!Input.GetMouseButtonUp(0))
         {
             movingTask.GetComponent<RectTransform>().position = Input.mousePosition;
             yield return null;
         }
+        bool makeTaskNextSibling = movingScript.transform.position.y < movingScript.hoveringTask.transform.position.y;
+
+        TaskData lastHoveredTask = movingScript.hoveringTask.Data;
+        //stop if the active task won't move/change siblings
+        if (lastHoveredTask == activeTask || (makeTaskNextSibling && lastHoveredTask.nextSibling_ID.Equals(activeTask.id)) 
+            || (!makeTaskNextSibling && lastHoveredTask.prevSibling_ID.Equals(activeTask.id)))
+        {
+            Destroy(movingTask);
+            yield break;
+        }
+
+        dataManager.RemoveAndExchangeSiblingIDs(activeTask);
+        //if the last hovered task is higher than mouse, make activeTask next sibling
+        if (makeTaskNextSibling)
+        {
+            #region Exchanging Sibling References
+            if (lastHoveredTask.nextSibling_ID != 0)
+                dataManager.FindTask(lastHoveredTask.nextSibling_ID).prevSibling_ID = activeTask.id;
+            if (lastHoveredTask.prevSibling_ID.Equals(activeTask.id))
+                lastHoveredTask.prevSibling_ID = activeTask.prevSibling_ID;
+
+            activeTask.prevSibling_ID = lastHoveredTask.id;
+            activeTask.nextSibling_ID = lastHoveredTask.nextSibling_ID;
+            lastHoveredTask.nextSibling_ID = activeTask.id;
+            #endregion
+        }
+        else //make activeTask previous sibling
+        {
+            #region Exchanging Sibling References
+            //Exchanging Sibling References:
+            if (lastHoveredTask.prevSibling_ID != 0)
+                dataManager.FindTask(lastHoveredTask.prevSibling_ID).nextSibling_ID = activeTask.id;
+            if (lastHoveredTask.nextSibling_ID.Equals(activeTask.id))
+                lastHoveredTask.nextSibling_ID = activeTask.nextSibling_ID;
+
+            activeTask.prevSibling_ID = lastHoveredTask.prevSibling_ID;
+            activeTask.nextSibling_ID = lastHoveredTask.id;
+            lastHoveredTask.prevSibling_ID = activeTask.id; 
+            #endregion
+        }
+        dataManager.SaveData();
+
         Destroy(movingTask);
+        RemoveAllTasks();
+        AddTaskAndNextSiblings(dataManager.FindFirstSibling(activeTask));
     }
 
 
@@ -274,7 +320,11 @@ public class TaskListManager : MonoBehaviour
     public void ShowParentSiblings()
     {
         if (activeParent is null)
+        {
+            ScreenManager.instance.ChangeState<MenuManager>(); //leave this list
             return;
+        }
+
         RemoveAllTasks();
         AddTaskAndNextSiblings(dataManager.FindFirstSibling(activeParent));
         ChangeParent(activeParent.parent_ID);

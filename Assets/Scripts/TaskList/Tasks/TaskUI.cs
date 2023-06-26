@@ -37,7 +37,7 @@ public class TaskUI : MonoBehaviour
     public void AddChild() => Manager.TaskAddChild(this);
     public void Remove() => Manager.RemoveTask(this);
 
-    public void Move() => StartCoroutine(Manager.MoveTask(this));
+    public void Move() => StartCoroutine(Manager.MoveTask(Data));
 
     public enum DataProperties
     {
@@ -59,10 +59,7 @@ public class TaskUI : MonoBehaviour
                 break;
 
             case DataProperties.CompleteStatus:
-                //darken task when completed
-                var alpha = name_ButtonImage.color;
-                alpha.a = Data.completed ? .5f : 1f;
-                name_ButtonImage.color = alpha;
+                DarkenColor(Data.completed); //darken task when completed
 
                 //slash text when completed
                 if (Data.completed)
@@ -79,5 +76,12 @@ public class TaskUI : MonoBehaviour
                 Debug.LogError(updateProperty.ToString() + " (this condition has not been set up)");
                 break;
         }
+    }
+
+    public void DarkenColor(bool darken)
+    {
+        var alpha = name_ButtonImage.color;
+        alpha.a = darken ? .5f : 1f;
+        name_ButtonImage.color = alpha;
     }
 }
