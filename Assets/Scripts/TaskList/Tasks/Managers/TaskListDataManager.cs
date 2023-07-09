@@ -207,7 +207,18 @@ public class TaskListDataManager : MonoBehaviour
         else //this is the first sibling
             return sibling;
     }
+    public TaskData FindFirstRootSibling()
+    {
+        foreach (TaskData task in currentData.lists[currentData.dayIndex].tasks)
+        {
+            if (task.parent_ID == 0)
+                 return FindFirstSibling(task);
+        }
+        Debug.LogWarning("There are no root tasks");
+        return null;
+    }
 
+    public List<TaskData> GetTodaysList() => currentData.lists[currentData.dayIndex].tasks;
     TaskListCollection SaveListToCollection(TaskListCollection collection, TaskListData listData, int dayIndex)
     {
         if (dayIndex < collection.lists.Count) //this day has a list, overwrite the list with "listData"

@@ -20,12 +20,13 @@ public class TaskListManager : MonoBehaviour
     [SerializeField] GameObject movingTaskPrefab;
     [SerializeField] Transform mainCanvas;
     TaskData activeParent;
+    TextMeshProUGUI parentName_text;
 
     public DaysOfWeek firstDay;
     public const int amountOfDaysInAWeek = 7;
     [SerializeField] TextMeshProUGUI dayIndex_text;
     [SerializeField] TextMeshProUGUI dayName_text;
-    [SerializeField] TextMeshProUGUI nextDayButton_Text;
+    [SerializeField] TextMeshProUGUI nextDayButton_text;
 
     int dayIndex;
     public int DayIndex
@@ -34,7 +35,8 @@ public class TaskListManager : MonoBehaviour
         set
         {
             dayIndex = value;
-            dayIndex_text.text = value.ToString();
+            if (dayIndex_text is not null)
+                dayIndex_text.text = value.ToString();
         }
     }
 
@@ -53,16 +55,20 @@ public class TaskListManager : MonoBehaviour
         if (dayName_text is not null)
             dayName_text.text = ((DaysOfWeek)todaysIndex).ToString();
 
+        if (nextDayButton_text is null)
+            return;
         //if this is the last day that has a list, the next day button should be a "+" sign
         if (dataManager.currentData.lists.Count <= DayIndex + 1)
-            nextDayButton_Text.text = "+";
+            nextDayButton_text.text = "+";
         else
-            nextDayButton_Text.text = ">";
+            nextDayButton_text.text = ">";
     }
 
     private void Awake()
     {
         dataManager = GetComponent<TaskListDataManager>();
+        parentName_text = transform.Find("ShowParentSiblingsTop").Find("ParentName").GetComponent<TextMeshProUGUI>();
+        ChangeParent(null);
     }
 
     public void TaskMainAction(TaskUI taskUI)
@@ -113,7 +119,8 @@ public class TaskListManager : MonoBehaviour
 
         TaskData newTask = new TaskData(newTaskName, taskID, activeParent is null ? 0 : activeParent.id);
         AddNewSiblingTask(newTask);
-        ListChange();
+        if (ListChange is not null)
+            ListChange();
 
         return newTask;
     }
@@ -137,11 +144,19 @@ public class TaskListManager : MonoBehaviour
         }
 
         AddTask(newChildTask, true);
-        ListChange();
+        if (ListChange is not null)
+            ListChange();
     }
     public void DeconfirmChildTask() => ChangeParent(activeParent.parent_ID);
 
-    void ChangeParent(TaskData parent) => activeParent = parent;
+    void ChangeParent(TaskData parent)
+    {
+        activeParent = parent;
+        if (parent is not null)
+            parentName_text.text = parent.name;
+        else
+            parentName_text.text = "Root";
+    }
     void ChangeParent(int parentID)
     {
         if (parentID == 0)
@@ -155,7 +170,8 @@ public class TaskListManager : MonoBehaviour
         dataManager.DeleteTask(task.Data);
         Destroy(task.gameObject);
 
-        ListChange();
+        if (ListChange is not null)
+            ListChange();
     }
 
     public void ToggleTaskComplete(TaskUI task)
@@ -165,7 +181,8 @@ public class TaskListManager : MonoBehaviour
         SetParentCompleteStatus();
 
         dataManager.SaveData();
-        ListChange();
+        if (ListChange is not null)
+            ListChange();
     }
     void SetParentCompleteStatus()
     {
@@ -186,6 +203,10 @@ public class TaskListManager : MonoBehaviour
             activeParent.completed = allChildrenCompleted;
             //make sure all parents of these tasks have the correct complete status
             SetParentCompleteStatus(activeParent);
+            if (allChildrenCompleted is true)
+            {
+                ShowParentSiblings();
+            }
 
             dataManager.SaveData();
         }
@@ -303,17 +324,16 @@ public class TaskListManager : MonoBehaviour
 
         RemoveAllTasks();
         //show root tasks from "collection" on "dayIndex"
-        var taskList = collection.lists[collection.dayIndex].tasks;
-        for (int i = 0; i < taskList.Count; i++)
-        {
-            if (taskList[i].parent_ID == 0)
-                AddTask(taskList[i], false);
-        }
-        activeParent = null;
+        TaskData firstRootSibling = dataManager.FindFirstRootSibling();
+        if (firstRootSibling is not null)
+            AddTaskAndNextSiblings(firstRootSibling);
+        ChangeParent(null);
+
         firstDay = collection.firstDay;
         DayIndex = collection.dayIndex;
         SetToday();
-        ListChange();
+        if (ListChange is not null)
+            ListChange();
 
     }
 
