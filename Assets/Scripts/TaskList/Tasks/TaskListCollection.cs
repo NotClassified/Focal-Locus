@@ -8,7 +8,9 @@ public class TaskListCollection
     public List<TaskListData> lists = new List<TaskListData>();
     public int dayIndex;
     public DaysOfWeek firstDay; //index 0
-    public int newestTaskID;
+
+    public int newestTaskID = 0;
+    public int GetNewID() => ++newestTaskID;
 
     public TaskListCollection()
     {

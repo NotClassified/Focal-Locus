@@ -843,7 +843,7 @@ MonoBehaviour:
   firstDay: 1
   dayIndex_text: {fileID: 1022757936}
   dayName_text: {fileID: 0}
-  nextDayButton_text: {fileID: 0}
+  nextDayButton_text: {fileID: 698075980}
 --- !u!114 &50954200
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14266,7 +14266,7 @@ MonoBehaviour:
   firstDay: 1
   dayIndex_text: {fileID: 1630486272}
   dayName_text: {fileID: 422776761}
-  nextDayButton_text: {fileID: 0}
+  nextDayButton_text: {fileID: 2130116280}
 --- !u!114 &1769535427
 MonoBehaviour:
   m_ObjectHideFlags: 0

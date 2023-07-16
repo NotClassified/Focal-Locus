@@ -111,7 +111,7 @@ public class TaskListManager : MonoBehaviour
     }
     public TaskData ConfrimNewTask(string newTaskName)
     {
-        int taskID = TaskIDManager.getNewID;
+        int taskID = dataManager.currentData.GetNewID();
         if (newTaskName.Equals("/id"))
         {
             newTaskName = taskID.ToString();
@@ -126,7 +126,7 @@ public class TaskListManager : MonoBehaviour
     }
     public void ConfrimChildTask(string newTaskName)
     {
-        int taskID = TaskIDManager.getNewID;
+        int taskID = dataManager.currentData.GetNewID();
         if (newTaskName.Equals("/id"))
         {
             newTaskName = taskID.ToString();
@@ -317,9 +317,9 @@ public class TaskListManager : MonoBehaviour
         }
     }
 
-    public void LoadCollection(TaskListCollection collection)
+    public void LoadCollection()
     {
-        if (collection is null)
+        if (dataManager.GetTodaysList().Count == 0)
             return;
 
         RemoveAllTasks();
@@ -329,8 +329,8 @@ public class TaskListManager : MonoBehaviour
             AddTaskAndNextSiblings(firstRootSibling);
         ChangeParent(null);
 
-        firstDay = collection.firstDay;
-        DayIndex = collection.dayIndex;
+        firstDay = dataManager.currentData.firstDay;
+        DayIndex = dataManager.currentData.dayIndex;
         SetToday();
         if (ListChange is not null)
             ListChange();

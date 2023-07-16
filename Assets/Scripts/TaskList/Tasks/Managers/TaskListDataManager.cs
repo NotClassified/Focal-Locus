@@ -75,8 +75,7 @@ public class TaskListDataManager : MonoBehaviour
     }
     void LoadData()
     {
-        listManager.LoadCollection(currentData);
-        TaskIDManager.SetNewestID(currentData.newestTaskID);
+        listManager.LoadCollection();
     }
     string ConvertDataToJson(bool print)
     {
@@ -116,7 +115,6 @@ public class TaskListDataManager : MonoBehaviour
     public void AddTask(TaskData newTask)
     {
         currentData.lists[currentData.dayIndex].tasks.Add(newTask);
-        currentData.newestTaskID = newTask.id;
         SaveData();
     }
     public void DeleteTask(TaskData task)
@@ -218,7 +216,14 @@ public class TaskListDataManager : MonoBehaviour
         return null;
     }
 
-    public List<TaskData> GetTodaysList() => currentData.lists[currentData.dayIndex].tasks;
+    public List<TaskData> GetTodaysList()
+    {
+        //print(currentData is null);
+        //print(currentData.lists is null);
+        //print(currentData.lists[currentData.dayIndex] is null);
+        //print(currentData.lists[currentData.dayIndex].tasks is null);
+        return currentData.lists[currentData.dayIndex].tasks;
+    }
     TaskListCollection SaveListToCollection(TaskListCollection collection, TaskListData listData, int dayIndex)
     {
         if (dayIndex < collection.lists.Count) //this day has a list, overwrite the list with "listData"
@@ -248,13 +253,13 @@ public class TaskListDataManager : MonoBehaviour
         }
         currentData.dayIndex = newDay;
 
-        listManager.LoadCollection(currentData);
+        LoadData();
 
     }
     public void ChangeFirstDay(DaysOfWeek firstDay)
     {
         currentData.firstDay = firstDay;
-        listManager.LoadCollection(currentData);
+        LoadData();
     }
     public void DeleteToday()
     {
@@ -267,6 +272,6 @@ public class TaskListDataManager : MonoBehaviour
         //load the new today
         todayIndex = currentData.lists.Count - 1;
         currentData.dayIndex = todayIndex;
-        listManager.LoadCollection(currentData);
+        LoadData();
     }
 }
