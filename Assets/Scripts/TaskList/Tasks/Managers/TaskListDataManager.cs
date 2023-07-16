@@ -218,10 +218,6 @@ public class TaskListDataManager : MonoBehaviour
 
     public List<TaskData> GetTodaysList()
     {
-        //print(currentData is null);
-        //print(currentData.lists is null);
-        //print(currentData.lists[currentData.dayIndex] is null);
-        //print(currentData.lists[currentData.dayIndex].tasks is null);
         return currentData.lists[currentData.dayIndex].tasks;
     }
     TaskListCollection SaveListToCollection(TaskListCollection collection, TaskListData listData, int dayIndex)

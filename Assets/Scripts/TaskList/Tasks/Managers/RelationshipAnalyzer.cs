@@ -21,7 +21,7 @@ public class RelationshipAnalyzer : MonoBehaviour
         listParent.SetActive(false);
         toggleParent.SetActive(true);
 
-        var list = dataManager.currentData.lists[dataManager.currentData.dayIndex];
+        var list = dataManager.GetTodaysList();
 
     }
 }
