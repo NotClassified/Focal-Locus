@@ -33,6 +33,9 @@ public class PromptManager : MonoBehaviour
     TMP_Dropdown dropDown;
     TextMeshProUGUI question_Text;
 
+    System.Action DeleteOptionMethod;
+    System.Action AddTaskOptionMethod;
+
     private void Awake()
     {
         promptParent.SetActive(false);
@@ -49,7 +52,7 @@ public class PromptManager : MonoBehaviour
     public void PromptDropDown(int option)
     {
         option--; //skip the blank/title option
-        bool lastPromptAction = true; //disables all prompts, should be set to false if another prompt is expected
+        bool lastPromptAction = true; //disables all prompts, invoking "Confrim" isn't needed
 
         switch (activePrompt)
         {
@@ -66,10 +69,12 @@ public class PromptManager : MonoBehaviour
                 switch (deleteOption)
                 {
                     case DeleteActionOptions.DeleteToday:
-                        dataTaskManager.DeleteToday();
+                        DeleteOptionMethod = () => dataTaskManager.DeleteToday();
+                        lastPromptAction = false; //wait for "Confrim" to be invoked
                         break;
                     case DeleteActionOptions.FormatData:
-                        dataTaskManager.FormatData();
+                        DeleteOptionMethod = () => dataTaskManager.FormatData();
+                        lastPromptAction = false; //wait for "Confrim" to be invoked
                         break;
                     default:
                         Debug.LogError("This delete option hasn't been implemented: " + deleteOption);
@@ -84,7 +89,7 @@ public class PromptManager : MonoBehaviour
                         AssignInputFieldPlaceHolder("Task Name...");
 
                         dropDown.gameObject.SetActive(false);
-                        lastPromptAction = false; //show input field prompt
+                        lastPromptAction = false; //needs to show another prompt
                         break;
                     case AddTaskOptions.AddLastDeleted:
                         dataTaskManager.AddLastDeletedTask();
@@ -130,7 +135,7 @@ public class PromptManager : MonoBehaviour
                         taskManager.ConfrimChildTask(inputFieldValue);
                         break;
                     case Prompt.DeleteAction:
-                        dataTaskManager.FormatData();
+                        DeleteOptionMethod?.Invoke();
                         break;
                     case Prompt.GoToToday:
                         dataTaskManager.ChangeDay(dataTaskManager.currentData.lists.Count - 1, 0);
