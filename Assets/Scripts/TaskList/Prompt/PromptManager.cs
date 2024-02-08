@@ -7,11 +7,15 @@ using TMPro;
 [System.Serializable]
 public enum Prompt
 {
-    Cancel, Confirm, AddTask, AddChild, ChangeFirstDay, DeleteAction, GoToToday, DeleteTask
+    Cancel, Confirm, AddTask, AddChild, ChangeFirstDay, DeleteAction, GoToToday, DeleteTask,
 }
 public enum DeleteActionOptions
 {
     DeleteToday, FormatData
+}
+public enum AddTaskOptions
+{
+    CreateNew, AddLastDeleted
 }
 
 public class PromptManager : MonoBehaviour
@@ -45,6 +49,7 @@ public class PromptManager : MonoBehaviour
     public void PromptDropDown(int option)
     {
         option--; //skip the blank/title option
+        bool lastPromptAction = true; //disables all prompts, should be set to false if another prompt is expected
 
         switch (activePrompt)
         {
@@ -71,12 +76,30 @@ public class PromptManager : MonoBehaviour
                         break;
                 }
                 break;
+            case Prompt.AddTask:
+                AddTaskOptions addOption = (AddTaskOptions)option;
+                switch (addOption)
+                {
+                    case AddTaskOptions.CreateNew:
+                        AssignInputFieldPlaceHolder("Task Name...");
+
+                        dropDown.gameObject.SetActive(false);
+                        lastPromptAction = false; //show input field prompt
+                        break;
+                    case AddTaskOptions.AddLastDeleted:
+                        dataTaskManager.AddLastDeletedTask();
+                        break;
+                    default:
+                        Debug.LogError("This delete option hasn't been implemented: " + addOption);
+                        break;
+                }
+                break;
             default:
                 Debug.LogError("This prompt doesn't have dropdown options: " + activePrompt);
                 break;
         }
-        promptParent.SetActive(false);
-
+        //disbale all prompts if there are not any new prompts expected after this drop down prompt
+        promptParent.SetActive(!lastPromptAction);
     }
 
     public void PromptAction(PromptComponent component, object extraData)
@@ -135,9 +158,6 @@ public class PromptManager : MonoBehaviour
         string placeHolder;
         switch (prompt)
         {
-            case Prompt.AddTask:
-                placeHolder = "Task Name...";
-                break;
             case Prompt.AddChild:
                 placeHolder = "Child Task Name...";
                 break;
@@ -145,6 +165,10 @@ public class PromptManager : MonoBehaviour
                 inputField.gameObject.SetActive(false);
                 return; //This UI not needed
         }
+        AssignInputFieldPlaceHolder(placeHolder);
+    }
+    void AssignInputFieldPlaceHolder(string placeHolder)
+    {
         inputField.text = "";
         inputField.placeholder.GetComponent<TextMeshProUGUI>().text = placeHolder;
         inputField.gameObject.SetActive(true);
@@ -192,6 +216,14 @@ public class PromptManager : MonoBehaviour
                 {
                     DeleteActionOptions deleteOption = (DeleteActionOptions)i;
                     options.Add(deleteOption.ToString());
+                }
+                break;
+            case Prompt.AddTask:
+                options[0] = "Choose Task Add Option";
+                for (int i = 0; i < System.Enum.GetValues(typeof(AddTaskOptions)).Length; i++)
+                {
+                    AddTaskOptions addOption = (AddTaskOptions)i;
+                    options.Add(addOption.ToString());
                 }
                 break;
             default:

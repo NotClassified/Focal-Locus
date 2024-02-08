@@ -10,6 +10,8 @@ public class TaskListDataManager : MonoBehaviour
     public TaskListCollection currentData = new TaskListCollection();
     [SerializeField] string fileName;
 
+    TaskData lastDeletedTask;
+
     private void Awake()
     {
         listManager = GetComponent<TaskListManager>();
@@ -40,7 +42,7 @@ public class TaskListDataManager : MonoBehaviour
 
     public void SaveData()
     {
-        DeleteData(); //for overwriting
+        DeleteDataFile(); //for overwriting
 
         using (FileStream stream = File.Open(Application.persistentDataPath + "/" + fileName + ".json", 
                                              FileMode.OpenOrCreate, FileAccess.ReadWrite))
@@ -96,13 +98,11 @@ public class TaskListDataManager : MonoBehaviour
 
     public void FormatData()
     {
-        DeleteData();
-
+        DeleteDataFile();
         currentData = new TaskListCollection();
-        SaveData();
-        LoadData();
+        LoadData(); //show empty collection
     }
-    void DeleteData()
+    void DeleteDataFile()
     {
         if (!DataExists())
             return;
@@ -117,8 +117,16 @@ public class TaskListDataManager : MonoBehaviour
         currentData.lists[currentData.dayIndex].tasks.Add(newTask);
         SaveData();
     }
+    public void AddLastDeletedTask()
+    {
+        if (lastDeletedTask == null)
+            return;
+        listManager.ConfrimNewTask(lastDeletedTask.name);
+    }
     public void DeleteTask(TaskData task)
     {
+        lastDeletedTask = task;
+
         DeleteChildren(task);
 
         //change the parent's child reference, if this task is the child reference
@@ -248,6 +256,7 @@ public class TaskListDataManager : MonoBehaviour
                 task.completed = false;
         }
         currentData.dayIndex = newDay;
+        SaveData();
 
         LoadData();
 
@@ -255,6 +264,7 @@ public class TaskListDataManager : MonoBehaviour
     public void ChangeFirstDay(DaysOfWeek firstDay)
     {
         currentData.firstDay = firstDay;
+        SaveData();
         LoadData();
     }
     public void DeleteToday()
@@ -268,6 +278,8 @@ public class TaskListDataManager : MonoBehaviour
         //load the new today
         todayIndex = currentData.lists.Count - 1;
         currentData.dayIndex = todayIndex;
+
+        SaveData();
         LoadData();
     }
 }

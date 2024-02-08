@@ -319,10 +319,18 @@ public class TaskListManager : MonoBehaviour
 
     public void LoadCollection()
     {
-        if (dataManager.GetTodaysList().Count == 0)
-            return;
-
         RemoveAllTasks();
+
+        if (dataManager.GetTodaysList().Count == 0) //empty list?
+        {
+            firstDay = 0;
+            DayIndex = 0;
+            SetToday();
+
+            ListChange?.Invoke();
+            return;
+        }
+
         //show root tasks from "collection" on "dayIndex"
         TaskData firstRootSibling = dataManager.FindFirstRootSibling();
         if (firstRootSibling is not null)
@@ -332,8 +340,7 @@ public class TaskListManager : MonoBehaviour
         firstDay = dataManager.currentData.firstDay;
         DayIndex = dataManager.currentData.dayIndex;
         SetToday();
-        if (ListChange is not null)
-            ListChange();
+        ListChange?.Invoke();
 
     }
 
