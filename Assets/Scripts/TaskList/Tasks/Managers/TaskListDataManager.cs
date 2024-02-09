@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using Unity.VisualScripting;
 
 public class TaskListDataManager : MonoBehaviour
 {
@@ -187,22 +188,32 @@ public class TaskListDataManager : MonoBehaviour
     }
     public bool TryFindTask(int searchID, out TaskData foundTask)
     {
+        foundTask = null;
+
         if (searchID == 0) //There is no task ID that is 0
-        {
-            foundTask = null;
             return false;
+
+        //binary search:
+        List<TaskData> searchingList = currentData.lists[currentData.dayIndex].tasks;
+        int left = 0;
+        int right = searchingList.Count - 1;
+        int mid;
+        while (left <= right)
+        {
+            mid = (left + right) / 2;
+
+            if (searchingList[mid].id == searchID)
+            {
+                foundTask = searchingList[mid];
+                return true; //task found
+            }
+            else if (searchingList[mid].id < searchID)
+                left = mid + 1;
+            else
+                right = mid - 1;
         }
 
-        foreach (TaskData task in currentData.lists[currentData.dayIndex].tasks)
-        {
-            if (task.id == searchID)
-            {
-                foundTask = task;
-                return true;
-            }
-        }
-        foundTask = null;
-        return false;
+        return false; //task not found
     }
     public TaskData FindFirstSibling(int siblingID) => FindFirstSibling(FindTask(siblingID));
     public TaskData FindFirstSibling(TaskData sibling)
