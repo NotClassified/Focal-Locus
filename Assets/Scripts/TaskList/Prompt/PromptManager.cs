@@ -7,15 +7,19 @@ using TMPro;
 [System.Serializable]
 public enum Prompt
 {
-    Cancel, Confirm, AddTask, AddChild, ChangeFirstDay, DeleteAction, GoToToday, DeleteTask,
+    Cancel, Confirm, AddTask, AddChild, ChangeFirstDay, DeleteAction, GoToToday, DeleteTask, TaskOptions, EditName
 }
 public enum DeleteActionOptions
 {
-    DeleteToday, FormatData
+    DeleteToday, DeleteThisDay, FormatData
 }
 public enum AddTaskOptions
 {
     CreateNew, AddLastDeleted
+}
+public enum TaskOptions
+{
+    EditName, RemoveTask
 }
 
 public class PromptManager : MonoBehaviour
@@ -72,6 +76,10 @@ public class PromptManager : MonoBehaviour
                         DeleteOptionMethod = () => dataTaskManager.DeleteToday();
                         lastPromptAction = false; //wait for "Confrim" to be invoked
                         break;
+                    case DeleteActionOptions.DeleteThisDay:
+                        DeleteOptionMethod = () => dataTaskManager.DeleteThisDay();
+                        lastPromptAction = false; //wait for "Confrim" to be invoked
+                        break;
                     case DeleteActionOptions.FormatData:
                         DeleteOptionMethod = () => dataTaskManager.FormatData();
                         lastPromptAction = false; //wait for "Confrim" to be invoked
@@ -92,12 +100,52 @@ public class PromptManager : MonoBehaviour
                         lastPromptAction = false; //needs to show another prompt
                         break;
                     case AddTaskOptions.AddLastDeleted:
-                        dataTaskManager.AddLastDeletedTask();
+                        dataTaskManager.AddLastDeletedTask(isChild: false);
                         break;
                     default:
                         Debug.LogError("This delete option hasn't been implemented: " + addOption);
                         break;
                 }
+                break;
+            case Prompt.AddChild:
+                addOption = (AddTaskOptions)option;
+                switch (addOption)
+                {
+                    case AddTaskOptions.CreateNew:
+                        AssignInputFieldPlaceHolder("Child Task Name...");
+
+                        dropDown.gameObject.SetActive(false);
+                        lastPromptAction = false; //needs to show another prompt
+                        break;
+                    case AddTaskOptions.AddLastDeleted:
+                        dataTaskManager.AddLastDeletedTask(isChild: true);
+                        break;
+                    default:
+                        Debug.LogError("This delete option hasn't been implemented: " + addOption);
+                        break;
+                }
+                break;
+            case Prompt.TaskOptions:
+                TaskOptions taskOption = (TaskOptions)option;
+                switch (taskOption)
+                {
+                    case TaskOptions.EditName:
+                        activePrompt = Prompt.EditName;
+                        AssignInputFieldPlaceHolder("Edit Task Name...");
+
+                        dropDown.gameObject.SetActive(false);
+                        break;
+                    case TaskOptions.RemoveTask:
+                        activePrompt = Prompt.DeleteTask;
+                        AssignQuestion(Prompt.DeleteTask);
+
+                        dropDown.gameObject.SetActive(false);
+                        lastPromptAction = false; //needs to show another prompt
+                        break;
+                    default:
+                        throw new System.NotImplementedException();
+                }
+                lastPromptAction = false; //needs to show another prompt
                 break;
             default:
                 Debug.LogError("This prompt doesn't have dropdown options: " + activePrompt);
@@ -109,7 +157,7 @@ public class PromptManager : MonoBehaviour
 
     public void PromptAction(PromptComponent component, object extraData)
     {
-        if (extraData is not null)
+        if (extraData != null)
             activeExtraData = extraData;
 
         PromptAction(component.prompt);
@@ -129,10 +177,10 @@ public class PromptManager : MonoBehaviour
                 switch (activePrompt)
                 {
                     case Prompt.AddTask:
-                        taskManager.ConfrimNewTask(inputFieldValue);
+                        taskManager.ConfirmNewTask(inputFieldValue);
                         break;
                     case Prompt.AddChild:
-                        taskManager.ConfrimChildTask(inputFieldValue);
+                        taskManager.ConfirmChildTask(inputFieldValue);
                         break;
                     case Prompt.DeleteAction:
                         DeleteOptionMethod?.Invoke();
@@ -142,6 +190,9 @@ public class PromptManager : MonoBehaviour
                         break;
                     case Prompt.DeleteTask:
                         taskManager.RemoveTask((TaskUI) activeExtraData);
+                        break;
+                    case Prompt.EditName:
+                        taskManager.ConfirmNewTaskName((TaskUI)activeExtraData, inputFieldValue);
                         break;
                 }
                 promptParent.SetActive(false);
@@ -163,14 +214,13 @@ public class PromptManager : MonoBehaviour
         string placeHolder;
         switch (prompt)
         {
-            case Prompt.AddChild:
-                placeHolder = "Child Task Name...";
-                break;
             default:
                 inputField.gameObject.SetActive(false);
                 return; //This UI not needed
         }
+#pragma warning disable CS0162 // Unreachable code detected
         AssignInputFieldPlaceHolder(placeHolder);
+#pragma warning restore CS0162 // Unreachable code detected
     }
     void AssignInputFieldPlaceHolder(string placeHolder)
     {
@@ -228,6 +278,22 @@ public class PromptManager : MonoBehaviour
                 for (int i = 0; i < System.Enum.GetValues(typeof(AddTaskOptions)).Length; i++)
                 {
                     AddTaskOptions addOption = (AddTaskOptions)i;
+                    options.Add(addOption.ToString());
+                }
+                break;
+            case Prompt.AddChild:
+                options[0] = "Choose Child Add Option";
+                for (int i = 0; i < System.Enum.GetValues(typeof(AddTaskOptions)).Length; i++)
+                {
+                    AddTaskOptions addOption = (AddTaskOptions)i;
+                    options.Add(addOption.ToString());
+                }
+                break;
+            case Prompt.TaskOptions:
+                options[0] = "Choose Task Option";
+                for (int i = 0; i < System.Enum.GetValues(typeof(TaskOptions)).Length; i++)
+                {
+                    TaskOptions addOption = (TaskOptions)i;
                     options.Add(addOption.ToString());
                 }
                 break;

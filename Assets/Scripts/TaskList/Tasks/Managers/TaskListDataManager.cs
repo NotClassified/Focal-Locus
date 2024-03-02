@@ -118,11 +118,15 @@ public class TaskListDataManager : MonoBehaviour
         currentData.lists[currentData.dayIndex].tasks.Add(newTask);
         SaveData();
     }
-    public void AddLastDeletedTask()
+    public void AddLastDeletedTask(bool isChild)
     {
         if (lastDeletedTask == null)
             return;
-        listManager.ConfrimNewTask(lastDeletedTask.name);
+
+        if (isChild)
+            listManager.ConfirmChildTask(lastDeletedTask.name);
+        else
+            listManager.ConfirmNewTask(lastDeletedTask.name);
     }
     public void DeleteTask(TaskData task)
     {
@@ -131,15 +135,20 @@ public class TaskListDataManager : MonoBehaviour
         DeleteChildren(task);
 
         //change the parent's child reference, if this task is the child reference
-        TaskData parent;
-        if (TryFindTask(task.parent_ID, out parent) && parent.child_ID == task.id)
+        if (TryFindTask(task.parent_ID, out TaskData parent) && parent.child_ID == task.id)
         {
             if (task.prevSibling_ID != 0)
+            {
                 parent.child_ID = task.prevSibling_ID;
+            }
             else if (task.nextSibling_ID != 0)
+            {
                 parent.child_ID = task.nextSibling_ID;
+            }
             else //there are no siblings, so this parent will no longer be a parent
-                parent.child_ID = 0; 
+            {
+                parent.child_ID = 0;
+            }
         }
         RemoveAndExchangeSiblingIDs(task);
 
@@ -156,7 +165,7 @@ public class TaskListDataManager : MonoBehaviour
         if (TryFindTask(task.prevSibling_ID, out previousSibling))
             previousSibling.nextSibling_ID = 0;
 
-        if (nextSibling is not null && previousSibling is not null)
+        if (nextSibling != null && previousSibling != null)
         {
             //exchange IDs to siblings
             nextSibling.prevSibling_ID = previousSibling.id;
@@ -289,6 +298,20 @@ public class TaskListDataManager : MonoBehaviour
         //load the new today
         todayIndex = currentData.lists.Count - 1;
         currentData.dayIndex = todayIndex;
+
+        SaveData();
+        LoadData();
+    }
+    public void DeleteThisDay()
+    {
+        if (currentData.lists.Count <= 1)
+            return;
+
+        currentData.lists.RemoveAt(currentData.dayIndex);
+
+        //load the day before the deleted day
+        if (currentData.dayIndex != 0)
+            currentData.dayIndex -= currentData.dayIndex;
 
         SaveData();
         LoadData();

@@ -35,7 +35,7 @@ public class TaskListManager : MonoBehaviour
         set
         {
             dayIndex = value;
-            if (dayIndex_text is not null)
+            if (dayIndex_text != null)
                 dayIndex_text.text = value.ToString();
         }
     }
@@ -52,10 +52,10 @@ public class TaskListManager : MonoBehaviour
     {
         //find which day of the week is today
         int todaysIndex = ((int)firstDay + dayIndex) % amountOfDaysInAWeek;
-        if (dayName_text is not null)
+        if (dayName_text != null)
             dayName_text.text = ((DaysOfWeek)todaysIndex).ToString();
 
-        if (nextDayButton_text is null)
+        if (nextDayButton_text == null)
             return;
         //if this is the last day that has a list, the next day button should be a "+" sign
         if (dataManager.currentData.lists.Count <= DayIndex + 1)
@@ -109,25 +109,33 @@ public class TaskListManager : MonoBehaviour
         AddTask(newSibling, true);
         SetParentCompleteStatus();
     }
-    public TaskData ConfrimNewTask(string newTaskName)
+    public TaskData ConfirmNewTask(string newTaskName)
     {
         int taskID = dataManager.currentData.GetNewID();
-        if (newTaskName.Equals("/id"))
+        if (newTaskName == null)
+        {
+            newTaskName = "";
+        }
+        else if(newTaskName.Equals("/id"))
         {
             newTaskName = taskID.ToString();
         }
+         
 
-        TaskData newTask = new TaskData(newTaskName, taskID, activeParent is null ? 0 : activeParent.id);
+        TaskData newTask = new TaskData(newTaskName, taskID, activeParent == null ? 0 : activeParent.id);
         AddNewSiblingTask(newTask);
-        if (ListChange is not null)
-            ListChange();
+        ListChange?.Invoke();
 
         return newTask;
     }
-    public void ConfrimChildTask(string newTaskName)
+    public void ConfirmChildTask(string newTaskName)
     {
         int taskID = dataManager.currentData.GetNewID();
-        if (newTaskName.Equals("/id"))
+        if (newTaskName == null)
+        {
+            newTaskName = "";
+        }
+        else if (newTaskName.Equals("/id"))
         {
             newTaskName = taskID.ToString();
         }
@@ -144,15 +152,30 @@ public class TaskListManager : MonoBehaviour
         }
 
         AddTask(newChildTask, true);
-        if (ListChange is not null)
-            ListChange();
+        ListChange?.Invoke();
     }
     public void DeconfirmChildTask() => ChangeParent(activeParent.parent_ID);
+
+    public void ConfirmNewTaskName(TaskUI taskUI, string newTaskName)
+    {
+        if (newTaskName == null)
+        {
+            newTaskName = "";
+        }
+        else if (newTaskName.Equals("/id"))
+        {
+            newTaskName = taskUI.Data.id.ToString();
+        }
+        taskUI.Data.name = newTaskName;
+        taskUI.UpdateUI(TaskUI.DataProperties.Name);
+
+        dataManager.SaveData();
+    }
 
     void ChangeParent(TaskData parent)
     {
         activeParent = parent;
-        if (parent is not null)
+        if (parent != null)
             parentName_text.text = parent.name;
         else
             parentName_text.text = "Root";
@@ -167,11 +190,14 @@ public class TaskListManager : MonoBehaviour
 
     public void RemoveTask(TaskUI task)
     {
+        //mark task as completed since the task will be removed
+        task.Data.completed = true;
+        SetParentCompleteStatus();
+
         dataManager.DeleteTask(task.Data);
         Destroy(task.gameObject);
 
-        if (ListChange is not null)
-            ListChange();
+        ListChange?.Invoke();
     }
 
     public void ToggleTaskComplete(TaskUI task)
@@ -181,12 +207,11 @@ public class TaskListManager : MonoBehaviour
         SetParentCompleteStatus();
 
         dataManager.SaveData();
-        if (ListChange is not null)
-            ListChange();
+        ListChange?.Invoke();
     }
-    void SetParentCompleteStatus()
+    public void SetParentCompleteStatus()
     {
-        if (activeParent is null)
+        if (activeParent == null)
             return;
 
         bool allChildrenCompleted = true;
@@ -333,7 +358,7 @@ public class TaskListManager : MonoBehaviour
 
         //show root tasks from "collection" on "dayIndex"
         TaskData firstRootSibling = dataManager.FindFirstRootSibling();
-        if (firstRootSibling is not null)
+        if (firstRootSibling != null)
             AddTaskAndNextSiblings(firstRootSibling);
         ChangeParent(null);
 
@@ -346,7 +371,7 @@ public class TaskListManager : MonoBehaviour
 
     public void ShowParentSiblings()
     {
-        if (activeParent is null)
+        if (activeParent == null)
         {
             ScreenManager.instance.ChangeState<MenuManager>(); //leave this list
             return;

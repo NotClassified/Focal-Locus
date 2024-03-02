@@ -33,9 +33,20 @@ public class TaskUI : MonoBehaviour
         }
     }
 
-    public void MainAction() => Manager.TaskMainAction(this);
+    private void OnEnable()
+    {
+        TaskListManager.ListChange += UpdateUI_AllProperties;
+    }
+    void OnDisable()
+    {
+        TaskListManager.ListChange -= UpdateUI_AllProperties;
+    }
+
+    public void MainAction()
+    {
+        Manager.TaskMainAction(this);
+    }
     public void AddChild() => Manager.TaskAddChild(this);
-    public void Remove() => Manager.RemoveTask(this);
 
     public void Move() => StartCoroutine(Manager.MoveTask(Data));
 
@@ -44,6 +55,7 @@ public class TaskUI : MonoBehaviour
         All, Name, CompleteStatus, ParentStatus
     }
 
+    void UpdateUI_AllProperties() => UpdateUI(DataProperties.All);
     public void UpdateUI(DataProperties updateProperty)
     {
         switch (updateProperty)

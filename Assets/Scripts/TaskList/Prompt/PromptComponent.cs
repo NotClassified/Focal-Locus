@@ -15,6 +15,9 @@ public class PromptComponent : MonoBehaviour
             case Prompt.DeleteTask:
                 extraData = GetComponentInParent<TaskUI>();
                 break;
+            case Prompt.TaskOptions:
+                extraData = GetComponentInParent<TaskUI>();
+                break;
         }
 
         GetComponent<Button>().onClick.AddListener(
