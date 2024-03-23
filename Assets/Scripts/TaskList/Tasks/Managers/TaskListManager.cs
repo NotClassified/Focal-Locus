@@ -70,6 +70,13 @@ public class TaskListManager : MonoBehaviour
         parentName_text = transform.Find("ShowParentSiblingsTop").Find("ParentName").GetComponent<TextMeshProUGUI>();
         ChangeParent(null);
     }
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Backspace) && !transform.Find("Prompt").gameObject.activeSelf)
+        {
+            ShowParentSiblings();
+        }
+    }
 
     public void TaskMainAction(TaskUI taskUI)
     {

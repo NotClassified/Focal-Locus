@@ -51,6 +51,13 @@ public class PromptManager : MonoBehaviour
         question_Text = promptParent.transform.Find("question_Text").GetComponent<TextMeshProUGUI>();
         
     }
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Return) && inputField.gameObject.activeInHierarchy)
+        {
+            PromptAction(Prompt.Confirm);
+        }
+    }
 
     public void PromptInputField(string input) => inputFieldValue = input;
     public void PromptDropDown(int option)
