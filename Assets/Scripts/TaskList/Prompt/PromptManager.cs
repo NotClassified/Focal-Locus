@@ -33,6 +33,7 @@ public class PromptManager : MonoBehaviour
 
     TMP_InputField inputField;
     string inputFieldValue;
+    string inputFieldPreviousValue;
 
     TMP_Dropdown dropDown;
     TextMeshProUGUI question_Text;
@@ -57,9 +58,45 @@ public class PromptManager : MonoBehaviour
         {
             PromptAction(Prompt.Confirm);
         }
+        if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Backspace) 
+            && inputField.gameObject.activeInHierarchy)
+        {
+            string newText = inputFieldPreviousValue;
+            int deleteEndIndex = inputField.caretPosition; //includes
+            int deleteStartIndex = deleteEndIndex; //includes
+            if (deleteEndIndex > 0)
+            {
+                while (deleteStartIndex > 0)
+                {
+                    if (newText[deleteStartIndex] != ' '
+                     && newText[deleteStartIndex] != '_'
+                     && newText[deleteStartIndex] != '+'
+                     && newText[deleteStartIndex] != '-'
+                     && newText[deleteStartIndex] != '('
+                     && newText[deleteStartIndex] != ')'
+                     && newText[deleteStartIndex] != '.')
+                    {
+                        deleteStartIndex--;
+                    }
+                    else 
+                    {
+                        if (deleteStartIndex < deleteEndIndex)
+                            deleteStartIndex++;
+                        break;
+                    }
+                }
+                newText = newText.Substring(0, deleteStartIndex) + newText.Substring(deleteEndIndex + 1);
+                inputField.text = newText;
+                inputField.caretPosition = deleteStartIndex;
+            }
+        }
     }
 
-    public void PromptInputField(string input) => inputFieldValue = input;
+    public void PromptInputField(string input)
+    {
+        inputFieldPreviousValue = inputFieldValue;
+        inputFieldValue = input;
+    }
     public void PromptDropDown(int option)
     {
         option--; //skip the blank/title option
@@ -138,7 +175,9 @@ public class PromptManager : MonoBehaviour
                 {
                     case TaskOptions.EditName:
                         activePrompt = Prompt.EditName;
-                        AssignInputFieldPlaceHolder("Edit Task Name...");
+
+                        string taskName = ((TaskUI)activeExtraData).Data.name;
+                        AssignInputFieldText(taskName, "Edit Task Name...");
 
                         dropDown.gameObject.SetActive(false);
                         break;
@@ -236,7 +275,20 @@ public class PromptManager : MonoBehaviour
         inputField.gameObject.SetActive(true);
         Invoke("FocusOnInputField", .1f);
     }
-    void FocusOnInputField() => inputField.Select();
+    void AssignInputFieldText(string text, string placeHolder)
+    {
+        inputField.text = text;
+        inputFieldValue = text;
+        inputField.placeholder.GetComponent<TextMeshProUGUI>().text = placeHolder;
+        inputField.gameObject.SetActive(true);
+        Invoke("FocusOnInputField", .1f);
+    }
+    void FocusOnInputField()
+    {
+        inputField.Select();
+        if (inputFieldValue != null)
+            inputField.caretPosition = inputFieldValue.Length;
+    }
 
     void AssignQuestion(Prompt prompt)
     {
