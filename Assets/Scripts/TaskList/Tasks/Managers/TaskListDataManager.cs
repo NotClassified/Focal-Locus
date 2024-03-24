@@ -24,6 +24,7 @@ public class TaskListDataManager : MonoBehaviour
     }
     private void Update()
     {
+#if UNITY_EDITOR
         if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.Alpha1))
         {
             ConvertDataToJson(true);
@@ -39,6 +40,30 @@ public class TaskListDataManager : MonoBehaviour
                 }
             }
         }
+        if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            string hiddenTaskMessage = "Hidden Tasks:\n";
+            for (int dayIndex = 0; dayIndex < currentData.lists.Count; dayIndex++)
+            {
+                foreach (TaskData hiddenTask in FindHiddenTasks(dayIndex))
+                {
+                    hiddenTaskMessage += "day: " + dayIndex + ", name: " + hiddenTask.name 
+                        + ", id: " + hiddenTask.id + "\n";
+                }
+            }
+            Debug.Log(hiddenTaskMessage);
+        }
+        if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            for (int dayIndex = 0; dayIndex < currentData.lists.Count; dayIndex++)
+            {
+                foreach (TaskData hiddenTask in FindHiddenTasks(dayIndex))
+                {
+                    currentData.lists[dayIndex].tasks.Remove(hiddenTask);
+                }
+            }
+        }
+#endif
     }
 
     public void SaveData()
@@ -187,15 +212,25 @@ public class TaskListDataManager : MonoBehaviour
             }
         }
     }
-    public TaskData FindTask(int searchID)
+    public TaskData FindTask(int searchID) => FindTask(searchID, currentData.dayIndex);
+    public TaskData FindTask(int searchID, int dayIndex)
     {
         TaskData foundTask;
-        if (!TryFindTask(searchID, out foundTask))
-            Debug.LogError("couldn't find task with ID: " + searchID);
+        if (!TryFindTask(searchID, out foundTask, dayIndex))
+        {
+            if (!TryFindTask_LinearSearch(searchID, out foundTask, dayIndex))
+            {
+                Debug.LogError("couldn't find task with ID: " + searchID + ", dayIndex: " + dayIndex);
+            }
+        }
 
         return foundTask;
     }
     public bool TryFindTask(int searchID, out TaskData foundTask)
+    {
+        return TryFindTask(searchID, out foundTask, currentData.dayIndex);
+    }
+    public bool TryFindTask(int searchID, out TaskData foundTask, int dayIndex, bool debug = false)
     {
         foundTask = null;
 
@@ -203,13 +238,18 @@ public class TaskListDataManager : MonoBehaviour
             return false;
 
         //binary search:
-        List<TaskData> searchingList = currentData.lists[currentData.dayIndex].tasks;
+        List<TaskData> searchingList = currentData.lists[dayIndex].tasks;
         int left = 0;
         int right = searchingList.Count - 1;
-        int mid;
+        int mid = -1;
         while (left <= right)
         {
             mid = (left + right) / 2;
+
+            if (debug)
+            {
+                Debug.Log("left: " + left + ", mid: " + mid + ", right: " + right);
+            }
 
             if (searchingList[mid].id == searchID)
             {
@@ -222,23 +262,66 @@ public class TaskListDataManager : MonoBehaviour
                 right = mid - 1;
         }
 
+        if (debug)
+        {
+            Debug.Log("left: " + left + ", mid: " + mid + ", right: " + right);
+
+            //try finding the task through linear search
+            int foundTaskIndex = 0;
+            for (int i = 0; i < searchingList.Count; i++)
+            {
+                if (searchingList[i].id == searchID)
+                {
+                    foundTaskIndex = i;
+                    break;
+                }
+            }
+            Debug.Log("foundTaskIndex: " + foundTaskIndex + "");
+        }
+
         return false; //task not found
     }
-    public TaskData FindFirstSibling(int siblingID) => FindFirstSibling(FindTask(siblingID));
-    public TaskData FindFirstSibling(TaskData sibling)
+    public bool TryFindTask_LinearSearch(int searchID, out TaskData foundTask, int dayIndex)
+    {
+        foundTask = null;
+
+        if (searchID == 0) //There is no task ID that is 0
+            return false;
+
+        List<TaskData> searchingList = currentData.lists[dayIndex].tasks;
+        for (int i = 0; i < searchingList.Count; i++)
+        {
+            if (searchingList[i].id == searchID)
+            {
+                foundTask = searchingList[i];
+                return true;
+            }
+        }
+
+        return false; //task not found
+    }
+    public TaskData FindFirstSibling(int siblingID) {
+        return FindFirstSibling(FindTask(siblingID, currentData.dayIndex), currentData.dayIndex);
+    }
+    public TaskData FindFirstSibling(int siblingID, int dayIndex) {
+        return FindFirstSibling(FindTask(siblingID, dayIndex), dayIndex);
+    }
+    public TaskData FindFirstSibling(TaskData sibling) => FindFirstSibling(sibling, currentData.dayIndex);
+    public TaskData FindFirstSibling(TaskData sibling, int dayIndex)
     {
         if (sibling.prevSibling_ID != 0) //is there a sibling before?
-            return FindFirstSibling(FindTask(sibling.prevSibling_ID));
+            return FindFirstSibling(FindTask(sibling.prevSibling_ID, dayIndex), dayIndex);
 
         else //this is the first sibling
             return sibling;
     }
-    public TaskData FindFirstRootSibling()
+    public TaskData FindFirstRootSibling() => FindFirstRootSibling(currentData.dayIndex);
+    public TaskData FindFirstRootSibling(int dayIndex)
     {
-        foreach (TaskData task in currentData.lists[currentData.dayIndex].tasks)
+        foreach (TaskData task in currentData.lists[dayIndex].tasks)
         {
             if (task.parent_ID == 0)
-                 return FindFirstSibling(task);
+                return FindFirstSibling(task, dayIndex);
         }
         Debug.LogWarning("There are no root tasks");
         return null;
@@ -316,4 +399,61 @@ public class TaskListDataManager : MonoBehaviour
         SaveData();
         LoadData();
     }
+
+
+    public List<TaskData> FindHiddenTasks(int dayIndex)
+    {
+        List<TaskData> tasks = currentData.lists[dayIndex].tasks;
+        List<int> visibleTaskIds = FindRelatedTasks(FindFirstRootSibling(dayIndex), dayIndex);
+
+        List<TaskData> hiddenTasks = new List<TaskData>();
+        foreach (TaskData task in tasks)
+        {
+            bool isVisible = false;
+            foreach (var visibleId in visibleTaskIds)
+            {
+                if (task.id == visibleId)
+                {
+                    isVisible = true;
+                    break;
+                }
+            }
+
+            if (!isVisible)
+            {
+                hiddenTasks.Add(task);
+            }
+        }
+
+        return hiddenTasks;
+    }
+    ///<summary> finds siblings and children tasks (must start with the first root sibling task) </summary>
+    List<int> FindRelatedTasks(TaskData task, int dayIndex)
+    {
+        List<int> relatedTaskIds = new List<int>
+        {
+            task.id //add self
+        };
+
+        if (task.child_ID != 0) //is a parent task
+        {
+            TaskData firstChild = FindFirstSibling(task.child_ID, dayIndex);
+            foreach (int relatedId in FindRelatedTasks(firstChild, dayIndex))
+            {
+                relatedTaskIds.Add(relatedId);
+            }
+        }
+
+        if (task.nextSibling_ID != 0) //has a next sibling
+        {
+            TaskData nextSibling = FindTask(task.nextSibling_ID, dayIndex);
+            foreach (int relatedId in FindRelatedTasks(nextSibling, dayIndex))
+            {
+                relatedTaskIds.Add(relatedId);
+            }
+        }
+
+        return relatedTaskIds;
+    }
+
 }
